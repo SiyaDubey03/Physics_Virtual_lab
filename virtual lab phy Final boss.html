@@ -1,0 +1,2858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PhysicsLab — Virtual Laboratory</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f0e8;
+    --bg2: #ede8de;
+    --bg3: #e4ddd0;
+    --card: #faf7f2;
+    --border: rgba(139,109,70,0.18);
+    --border2: rgba(139,109,70,0.35);
+    --accent: #7c5c2e;
+    --accent2: #6b5b95;
+    --accent3: #3a7d5e;
+    --accent4: #b85c2a;
+    --text: #2c1f0e;
+    --text2: #5a4630;
+    --text3: #9a8470;
+    --glow: 0 0 20px rgba(139,109,70,0.12);
+    --radius: 12px;
+    --success: #3a7d5e;
+    --warning: #b07d2a;
+    --error: #b04040;
+    --shadow: 0 2px 12px rgba(139,109,70,0.10);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Space Grotesk', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(139,109,70,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(139,109,70,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none; z-index: 0;
+  }
+
+  header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(245,240,232,0.95);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px;
+    box-shadow: var(--shadow);
+  }
+
+  .logo {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 1.2rem; font-weight: 700; color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: white; font-weight: 700;
+  }
+
+  .header-subtitle {
+    font-size: 0.75rem; color: var(--text3);
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 2px; text-transform: uppercase;
+  }
+
+  .app { display: flex; min-height: calc(100vh - 64px); position: relative; z-index: 1; }
+
+  .sidebar {
+    width: 260px; flex-shrink: 0;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    padding: 1.5rem 1rem;
+    display: flex; flex-direction: column; gap: 0.5rem;
+    position: sticky; top: 64px; height: calc(100vh - 64px);
+    overflow-y: auto;
+  }
+
+  .sidebar-title {
+    font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text3); font-family: 'JetBrains Mono', monospace;
+    padding: 0.5rem 0.75rem; margin-bottom: 0.25rem;
+  }
+
+  .exp-btn {
+    display: flex; align-items: center; gap: 12px;
+    padding: 0.75rem 1rem;
+    border-radius: 10px; border: 1px solid transparent;
+    background: transparent; cursor: pointer;
+    text-align: left; width: 100%; transition: all 0.2s;
+    color: var(--text2); font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.875rem;
+  }
+
+  .exp-btn:hover { background: var(--bg3); border-color: var(--border); color: var(--text); }
+
+  .exp-btn.active {
+    background: rgba(124,92,46,0.10);
+    border-color: rgba(124,92,46,0.30);
+    color: var(--accent);
+    box-shadow: var(--glow);
+  }
+
+  .exp-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; flex-shrink: 0; font-weight: 700;
+    color: var(--accent2);
+  }
+
+  .exp-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem; color: var(--text3);
+  }
+
+  main { flex: 1; overflow-y: auto; }
+
+  .experiment { display: none; padding: 2rem; }
+  .experiment.active { display: block; }
+
+  .exp-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .exp-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--accent); background: rgba(124,92,46,0.08);
+    border: 1px solid rgba(124,92,46,0.20);
+    padding: 4px 10px; border-radius: 20px; margin-bottom: 0.75rem;
+  }
+
+  .exp-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem; font-weight: 700; color: var(--text);
+    margin-bottom: 0.5rem; line-height: 1.2;
+  }
+
+  .exp-desc { color: var(--text2); font-size: 0.95rem; line-height: 1.7; max-width: 700px; }
+
+  .step-tabs {
+    display: flex; gap: 0; margin-bottom: 2rem;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    overflow: hidden; background: var(--bg2);
+  }
+
+  .step-tab {
+    flex: 1; padding: 0.625rem 1rem;
+    background: transparent; border: none; cursor: pointer;
+    font-family: 'Space Grotesk', sans-serif; font-size: 0.8rem;
+    color: var(--text3); transition: all 0.2s;
+    border-right: 1px solid var(--border);
+    display: flex; align-items: center; gap: 6px; justify-content: center;
+  }
+
+  .step-tab:last-child { border-right: none; }
+  .step-tab:hover { background: var(--bg3); color: var(--text2); }
+  .step-tab.active { background: rgba(124,92,46,0.10); color: var(--accent); }
+
+  .step-num {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--bg3); font-size: 0.65rem; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .step-tab.active .step-num { background: var(--accent); color: white; }
+
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden; margin-bottom: 1.5rem;
+    box-shadow: var(--shadow);
+  }
+
+  .panel-header {
+    padding: 1rem 1.5rem;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+    font-size: 0.875rem; font-weight: 600; color: var(--text);
+  }
+
+  .panel-body { padding: 1.5rem; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+
+  @media (max-width: 900px) {
+    .two-col, .three-col { grid-template-columns: 1fr; }
+    .sidebar { width: 220px; }
+  }
+
+  canvas {
+    display: block; width: 100%; border-radius: 8px;
+    background: #fdfaf5;
+    border: 1px solid var(--border);
+  }
+
+  .control-group { margin-bottom: 1.25rem; }
+
+  .control-label {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 0.8rem; color: var(--text2); margin-bottom: 0.5rem;
+  }
+
+  .control-value {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent); font-size: 0.8rem;
+  }
+
+  input[type=range] {
+    width: 100%; height: 4px;
+    background: var(--bg3); border-radius: 2px;
+    outline: none; appearance: none; cursor: pointer;
+  }
+
+  input[type=range]::-webkit-slider-thumb {
+    appearance: none; width: 16px; height: 16px;
+    border-radius: 50%; background: var(--accent);
+    box-shadow: 0 0 0 3px rgba(124,92,46,0.20);
+    cursor: pointer; transition: box-shadow 0.2s;
+  }
+
+  input[type=range]::-webkit-slider-thumb:hover {
+    box-shadow: 0 0 0 5px rgba(124,92,46,0.30);
+  }
+
+  select {
+    width: 100%; background: var(--bg3); border: 1px solid var(--border2);
+    color: var(--text); padding: 0.5rem 0.75rem;
+    border-radius: 8px; font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.85rem; outline: none; cursor: pointer;
+  }
+
+  .btn {
+    padding: 0.6rem 1.25rem; border-radius: 8px;
+    border: 1px solid var(--border2); background: rgba(124,92,46,0.08);
+    color: var(--accent); font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.85rem; font-weight: 500; cursor: pointer;
+    transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
+  }
+
+  .btn:hover { background: rgba(124,92,46,0.15); border-color: var(--accent); }
+
+  .btn-primary {
+    background: var(--accent); color: white; border-color: var(--accent);
+  }
+
+  .btn-primary:hover { background: #6a4e28; }
+
+  .btn-group { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+  .data-table {
+    width: 100%; border-collapse: collapse; font-size: 0.82rem;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .data-table th {
+    padding: 0.5rem 0.75rem; text-align: left;
+    background: var(--bg2); color: var(--text3);
+    font-size: 0.7rem; letter-spacing: 1px; text-transform: uppercase;
+    font-family: 'Space Grotesk', sans-serif;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .data-table td {
+    padding: 0.5rem 0.75rem; color: var(--text2);
+    border-bottom: 1px solid rgba(139,109,70,0.07);
+  }
+
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table td.highlight { color: var(--accent); font-weight: 500; }
+
+  .result-box {
+    background: rgba(58,125,94,0.06);
+    border: 1px solid rgba(58,125,94,0.22);
+    border-radius: 10px; padding: 1.25rem;
+    margin-top: 1rem;
+  }
+
+  .result-label { font-size: 0.75rem; color: var(--text3); margin-bottom: 0.25rem; }
+
+  .result-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.4rem; font-weight: 600; color: var(--success);
+  }
+
+  .result-unit { font-size: 0.85rem; color: var(--text3); margin-left: 4px; }
+
+  .info-callout {
+    background: rgba(107,91,149,0.06);
+    border-left: 3px solid var(--accent2);
+    border-radius: 0 8px 8px 0; padding: 1rem 1.25rem;
+    font-size: 0.875rem; color: var(--text2); line-height: 1.7;
+    margin-bottom: 1rem;
+  }
+
+  .info-callout strong { color: var(--accent2); }
+
+  .formula {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 0.75rem 1rem;
+    font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;
+    color: var(--accent4); text-align: center; margin: 1rem 0;
+  }
+
+  .procedure { display: flex; flex-direction: column; gap: 1rem; }
+
+  .proc-step {
+    display: flex; gap: 1rem; align-items: flex-start;
+  }
+
+  .proc-num {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: rgba(124,92,46,0.10); border: 1px solid rgba(124,92,46,0.30);
+    color: var(--accent); font-size: 0.75rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+
+  .proc-text { font-size: 0.875rem; color: var(--text2); line-height: 1.7; padding-top: 4px; }
+
+  .badge {
+    display: inline-block; padding: 2px 8px;
+    border-radius: 20px; font-size: 0.7rem; font-weight: 600;
+  }
+
+  .badge-blue { background: rgba(124,92,46,0.10); color: var(--accent); }
+  .badge-green { background: rgba(58,125,94,0.10); color: var(--success); }
+  .badge-orange { background: rgba(184,92,42,0.10); color: var(--accent4); }
+  .badge-purple { background: rgba(107,91,149,0.10); color: var(--accent2); }
+
+  .homescreen { padding: 3rem 2rem; }
+
+  .hero { text-align: center; margin-bottom: 4rem; }
+
+  .hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 3.5rem; font-weight: 700; line-height: 1.1;
+    background: linear-gradient(135deg, var(--text), var(--accent), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 1rem;
+  }
+
+  .hero-sub { color: var(--text2); font-size: 1.1rem; max-width: 500px; margin: 0 auto 2rem; }
+
+  .exp-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; }
+
+  .exp-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 1.75rem; cursor: pointer;
+    transition: all 0.3s; position: relative; overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+
+  .exp-card::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(circle at 0% 0%, rgba(124,92,46,0.04) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .exp-card:hover {
+    border-color: var(--border2);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(124,92,46,0.13);
+  }
+
+  .card-icon {
+    width: 52px; height: 52px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; margin-bottom: 1.25rem;
+    font-weight: 700; color: white;
+  }
+
+  .card-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem; color: var(--text3);
+    letter-spacing: 2px; margin-bottom: 0.5rem;
+  }
+
+  .card-title { font-size: 1.1rem; font-weight: 600; color: var(--text); margin-bottom: 0.5rem; }
+  .card-desc { font-size: 0.83rem; color: var(--text3); line-height: 1.6; }
+
+  .card-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 1.25rem; padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+
+  .card-tag { font-size: 0.7rem; color: var(--text3); }
+  .card-arrow { color: var(--accent); font-size: 1.2rem; }
+
+  .reading {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 0.75rem 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem; color: var(--success); margin-bottom: 0.75rem;
+  }
+
+  .reading-label { font-size: 0.7rem; color: var(--text3); margin-bottom: 0.2rem; font-family: 'Space Grotesk'; }
+
+  .obs-led {
+    display: inline-block; width: 8px; height: 8px;
+    border-radius: 50%; background: var(--success);
+    box-shadow: 0 0 8px var(--success);
+    animation: blink 1.5s infinite;
+    margin-right: 6px;
+  }
+
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Team page styles */
+  .team-page { padding: 2rem; }
+  .team-hero {
+    text-align: center; padding: 3rem 1rem 2rem;
+    border-bottom: 1px solid var(--border); margin-bottom: 2.5rem;
+  }
+  .team-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.4rem; color: var(--text); margin-bottom: 0.5rem;
+  }
+  .team-subtitle { color: var(--text3); font-size: 0.9rem; letter-spacing: 1px; }
+  .team-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem; margin-bottom: 2.5rem;
+  }
+  .team-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 2rem 1.5rem; text-align: center;
+    box-shadow: var(--shadow); transition: all 0.3s;
+  }
+  .team-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(124,92,46,0.13); border-color: var(--border2); }
+  .team-avatar {
+    width: 72px; height: 72px; border-radius: 50%;
+    margin: 0 auto 1rem;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem; font-weight: 700; color: white;
+    font-family: 'Playfair Display', serif;
+  }
+  .team-name { font-size: 1rem; font-weight: 600; color: var(--text); margin-bottom: 0.3rem; }
+  .team-role { font-size: 0.78rem; color: var(--text3); font-family: 'JetBrains Mono', monospace; }
+  .guide-card {
+    background: linear-gradient(135deg, rgba(124,92,46,0.08), rgba(107,91,149,0.08));
+    border: 1.5px solid var(--border2); border-radius: 16px; padding: 2rem;
+    text-align: center; display: flex; align-items: center; gap: 1.5rem;
+    box-shadow: var(--shadow);
+  }
+  .guide-avatar {
+    width: 80px; height: 80px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.8rem; font-weight: 700; color: white;
+    font-family: 'Playfair Display', serif;
+  }
+  .guide-info { text-align: left; }
+  .guide-label { font-size: 0.7rem; letter-spacing: 2px; text-transform: uppercase; color: var(--text3); margin-bottom: 0.3rem; font-family: 'JetBrains Mono', monospace; }
+  .guide-name { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--text); margin-bottom: 0.3rem; }
+  .guide-dept { font-size: 0.85rem; color: var(--text2); }
+
+  /* Improved canvas background for instruments */
+  #vernierCanvas, #screwCanvas { background: #faf6f0; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">PL</div>
+    PhysicsLab
+  </div>
+  <div class="header-subtitle">Virtual Laboratory Suite</div>
+  <div style="font-size:0.75rem; color:var(--text3); font-family:'JetBrains Mono',monospace">
+    <span style="color:var(--success)">●</span> System Online
+  </div>
+</header>
+
+<div class="app">
+  <nav class="sidebar">
+    <div class="sidebar-title">Experiments</div>
+
+    <button class="exp-btn active" onclick="showExp('home')">
+      <div class="exp-icon" style="background:rgba(124,92,46,0.10)">H</div>
+      <div>
+        <div style="font-size:0.875rem;font-weight:500">Home</div>
+        <div class="exp-num">Dashboard</div>
+      </div>
+    </button>
+
+    <button class="exp-btn" onclick="showExp('exp1')">
+      <div class="exp-icon" style="background:rgba(184,92,42,0.10)">MI</div>
+      <div>
+        <div style="font-size:0.875rem;font-weight:500">Measuring Instruments</div>
+        <div class="exp-num">EXP — 01</div>
+      </div>
+    </button>
+
+    <button class="exp-btn" onclick="showExp('exp2')">
+      <div class="exp-icon" style="background:rgba(107,91,149,0.10)">NR</div>
+      <div>
+        <div style="font-size:0.875rem;font-weight:500">Newton's Rings</div>
+        <div class="exp-num">EXP — 02</div>
+      </div>
+    </button>
+
+    <button class="exp-btn" onclick="showExp('exp3')">
+      <div class="exp-icon" style="background:rgba(58,125,94,0.10)">DG</div>
+      <div>
+        <div style="font-size:0.875rem;font-weight:500">Diffraction Grating</div>
+        <div class="exp-num">EXP — 03</div>
+      </div>
+    </button>
+
+    <button class="exp-btn" onclick="showExp('exp4')">
+      <div class="exp-icon" style="background:rgba(184,92,42,0.10)">FP</div>
+      <div>
+        <div style="font-size:0.875rem;font-weight:500">Four Probe Method</div>
+        <div class="exp-num">EXP — 04</div>
+      </div>
+    </button>
+
+    <button class="exp-btn" onclick="showExp('team')">
+      <div class="exp-icon" style="background:rgba(107,91,149,0.10)">TM</div>
+      <div>
+        <div style="font-size:0.875rem;font-weight:500">Team</div>
+        <div class="exp-num">Members</div>
+      </div>
+    </button>
+  </nav>
+
+  <main>
+
+    <!-- HOME -->
+    <div id="home" class="experiment active">
+      <div class="homescreen">
+        <div class="hero">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--accent);letter-spacing:3px;margin-bottom:1rem">VIRTUAL PHYSICS LABORATORY</div>
+          <div class="hero-title">Explore. Experiment.<br>Discover.</div>
+          <div class="hero-sub">Perform real physics experiments online with step-by-step guidance, interactive simulations, and data analysis tools.</div>
+          <div class="btn-group" style="justify-content:center">
+            <button class="btn btn-primary" onclick="showExp('exp1')">Start First Experiment</button>
+            <button class="btn" onclick="showExp('exp2')">Browse All Labs</button>
+          </div>
+        </div>
+
+        <div class="exp-cards">
+          <div class="exp-card" onclick="showExp('exp1')">
+            <div class="card-icon" style="background:rgba(184,92,42,0.80)">MI</div>
+            <div class="card-num">EXP — 01</div>
+            <div class="card-title">Measuring Instruments</div>
+            <div class="card-desc">Master Vernier calipers, screw gauge, spectrometer and travelling microscope. Measure with precision.</div>
+            <div class="card-footer">
+              <div style="display:flex;gap:6px">
+                <span class="badge badge-orange">Mechanics</span>
+                <span class="badge badge-blue">Beginner</span>
+              </div>
+              <span class="card-arrow">→</span>
+            </div>
+          </div>
+
+          <div class="exp-card" onclick="showExp('exp2')">
+            <div class="card-icon" style="background:rgba(107,91,149,0.80)">NR</div>
+            <div class="card-num">EXP — 02</div>
+            <div class="card-title">Newton's Rings</div>
+            <div class="card-desc">Observe interference patterns and calculate the radius of curvature of a plano-convex lens.</div>
+            <div class="card-footer">
+              <div style="display:flex;gap:6px">
+                <span class="badge badge-purple">Optics</span>
+                <span class="badge badge-blue">Intermediate</span>
+              </div>
+              <span class="card-arrow">→</span>
+            </div>
+          </div>
+
+          <div class="exp-card" onclick="showExp('exp3')">
+            <div class="card-icon" style="background:rgba(58,125,94,0.80)">DG</div>
+            <div class="card-num">EXP — 03</div>
+            <div class="card-title">Diffraction Grating</div>
+            <div class="card-desc">Measure wavelength of light using diffraction pattern analysis with multiple orders.</div>
+            <div class="card-footer">
+              <div style="display:flex;gap:6px">
+                <span class="badge badge-green">Wave Optics</span>
+                <span class="badge badge-blue">Intermediate</span>
+              </div>
+              <span class="card-arrow">→</span>
+            </div>
+          </div>
+
+          <div class="exp-card" onclick="showExp('exp4')">
+            <div class="card-icon" style="background:rgba(184,92,42,0.80)">FP</div>
+            <div class="card-num">EXP — 04</div>
+            <div class="card-title">Four Probe Method</div>
+            <div class="card-desc">Determine resistivity of a semiconductor using the four-probe technique accurately.</div>
+            <div class="card-footer">
+              <div style="display:flex;gap:6px">
+                <span class="badge badge-orange">Electronics</span>
+                <span class="badge badge-blue">Advanced</span>
+              </div>
+              <span class="card-arrow">→</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXP 1: MEASURING INSTRUMENTS -->
+    <div id="exp1" class="experiment">
+      <div class="exp-header">
+        <div class="exp-tag">EXP — 01</div>
+        <h1 class="exp-title">Measuring Instruments</h1>
+        <p class="exp-desc">Learn to use Vernier Calipers, Screw Gauge, Spectrometer, and Travelling Microscope. Practice precision measurements and calculate least counts, zero errors, and corrected readings.</p>
+      </div>
+
+      <div class="step-tabs" id="exp1-tabs">
+        <button class="step-tab active" onclick="switchTab('exp1',1)"><span class="step-num">1</span> Theory</button>
+        <button class="step-tab" onclick="switchTab('exp1',2)"><span class="step-num">2</span> Procedure</button>
+        <button class="step-tab" onclick="switchTab('exp1',3)"><span class="step-num">3</span> Vernier Caliper</button>
+        <button class="step-tab" onclick="switchTab('exp1',4)"><span class="step-num">4</span> Screw Gauge</button>
+        <button class="step-tab" onclick="switchTab('exp1',5)"><span class="step-num">5</span> Spectrometer</button>
+        <button class="step-tab" onclick="switchTab('exp1',6)"><span class="step-num">6</span> Trav. Microscope</button>
+        <button class="step-tab" onclick="switchTab('exp1',7)"><span class="step-num">7</span> Observations</button>
+      </div>
+
+      <!-- Tab 1: Theory -->
+      <div class="tab-content active" id="exp1-tab1">
+        <div class="info-callout">
+          <strong>Aim:</strong> To study the use of Vernier Calipers, Screw Gauge, Spectrometer and Travelling Microscope and take measurements of various objects.
+        </div>
+        <div class="two-col">
+          <div class="panel">
+            <div class="panel-header">Vernier Caliper</div>
+            <div class="panel-body">
+              <p style="font-size:0.875rem;color:var(--text2);margin-bottom:1rem;line-height:1.7">A Vernier caliper measures length with a precision up to 0.1mm or 0.02mm depending on the vernier scale divisions.</p>
+              <div class="formula">LC = 1 MSD − 1 VSD = S/n</div>
+              <p style="font-size:0.8rem;color:var(--text3);line-height:1.7">Where <strong style="color:var(--accent4)">S</strong> = value of one main scale division, <strong style="color:var(--accent4)">n</strong> = number of vernier scale divisions.</p>
+              <div style="margin-top:1rem">
+                <div style="font-size:0.75rem;color:var(--text3);margin-bottom:0.5rem">Typical Least Count</div>
+                <div style="font-size:1.5rem;font-family:'JetBrains Mono',monospace;color:var(--accent)">0.1 mm</div>
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">Screw Gauge</div>
+            <div class="panel-body">
+              <p style="font-size:0.875rem;color:var(--text2);margin-bottom:1rem;line-height:1.7">A screw gauge (micrometer) measures very small dimensions with a precision of 0.01mm using a screw mechanism.</p>
+              <div class="formula">LC = Pitch / Total divisions on thimble</div>
+              <p style="font-size:0.8rem;color:var(--text3);line-height:1.7">Typical pitch = 1mm, thimble divisions = 100, giving LC = <strong style="color:var(--accent4)">0.01mm</strong></p>
+              <div style="margin-top:1rem">
+                <div style="font-size:0.75rem;color:var(--text3);margin-bottom:0.5rem">Typical Least Count</div>
+                <div style="font-size:1.5rem;font-family:'JetBrains Mono',monospace;color:var(--accent)">0.01 mm</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="two-col">
+          <div class="panel">
+            <div class="panel-header">Spectrometer</div>
+            <div class="panel-body">
+              <p style="font-size:0.875rem;color:var(--text2);margin-bottom:1rem;line-height:1.7">A spectrometer is used to measure the angle of refraction, deviation, and for determining the wavelength of light using a prism or grating.</p>
+              <div class="formula">n = sin((A+D)/2) / sin(A/2)</div>
+              <p style="font-size:0.8rem;color:var(--text3);line-height:1.7">Where <strong style="color:var(--accent4)">A</strong> = angle of prism, <strong style="color:var(--accent4)">D</strong> = angle of minimum deviation.</p>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">Travelling Microscope</div>
+            <div class="panel-body">
+              <p style="font-size:0.875rem;color:var(--text2);margin-bottom:1rem;line-height:1.7">A travelling microscope is used to measure small lengths by recording the positions of the microscope cross-wire as it is moved from one point to another.</p>
+              <div class="formula">Length = Final Reading − Initial Reading</div>
+              <p style="font-size:0.8rem;color:var(--text3);line-height:1.7">Least count is typically <strong style="color:var(--accent4)">0.001 cm</strong> (0.01 mm).</p>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-header">Key Formulae</div>
+          <div class="panel-body">
+            <div class="three-col">
+              <div>
+                <div class="result-label">Vernier Reading</div>
+                <div class="formula" style="font-size:0.8rem">Total = MSR + (VSR × LC)</div>
+              </div>
+              <div>
+                <div class="result-label">Screw Gauge Reading</div>
+                <div class="formula" style="font-size:0.8rem">Total = PSR + (HSR × LC)</div>
+              </div>
+              <div>
+                <div class="result-label">Corrected Reading</div>
+                <div class="formula" style="font-size:0.8rem">R = Total Reading − Zero Error</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Procedure -->
+      <div class="tab-content" id="exp1-tab2">
+        <div class="panel">
+          <div class="panel-header">Experimental Procedure</div>
+          <div class="panel-body">
+            <div class="procedure">
+              <div class="proc-step"><div class="proc-num">1</div><div class="proc-text">Clean the jaws of the Vernier caliper and check for zero error by closing the jaws completely and noting the zero of the Vernier scale with respect to the main scale.</div></div>
+              <div class="proc-step"><div class="proc-num">2</div><div class="proc-text">Place the object (cylinder, sphere etc.) between the jaws and tighten gently until firm contact. Do not over-tighten.</div></div>
+              <div class="proc-step"><div class="proc-num">3</div><div class="proc-text">Note the Main Scale Reading (MSR) — the last complete division on the main scale just before the zero of the Vernier scale.</div></div>
+              <div class="proc-step"><div class="proc-num">4</div><div class="proc-text">Find the Vernier Scale Reading (VSR) — the division on the Vernier scale that exactly coincides with any main scale division.</div></div>
+              <div class="proc-step"><div class="proc-num">5</div><div class="proc-text">Calculate: Total Reading = MSR + (VSR × Least Count). Apply zero error correction.</div></div>
+              <div class="proc-step"><div class="proc-num">6</div><div class="proc-text">Repeat measurements at different positions of the object. Take 5 readings and calculate mean.</div></div>
+              <div class="proc-step"><div class="proc-num">7</div><div class="proc-text">For Screw Gauge: Note Pitch Scale Reading (PSR) and Head Scale Reading (HSR). Apply pitch corrections.</div></div>
+              <div class="proc-step"><div class="proc-num">8</div><div class="proc-text">For Spectrometer: Set up collimator and telescope. Place prism on table. Find angle of minimum deviation for the given spectral line.</div></div>
+              <div class="proc-step"><div class="proc-num">9</div><div class="proc-text">For Travelling Microscope: Focus on the object. Note the initial reading, move to next point, note final reading. Length = Final − Initial.</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Vernier Caliper Sim -->
+      <div class="tab-content" id="exp1-tab3">
+        <div class="panel">
+          <div class="panel-header">Interactive Vernier Caliper Simulation (0–50 mm range)</div>
+          <div class="panel-body">
+            <canvas id="vernierCanvas" height="220"></canvas>
+            <div style="margin-top:1.5rem">
+              <div class="control-group">
+                <div class="control-label">
+                  <span>Object Size (0–50 mm)</span>
+                  <span class="control-value" id="vernierPos">12.4 mm</span>
+                </div>
+                <input type="range" id="vernierSlider" min="0" max="490" value="124" oninput="updateVernier(this.value)">
+              </div>
+              <div class="control-group">
+                <div class="control-label"><span>Zero Error (div)</span><span class="control-value" id="zeroErrorV">0 div</span></div>
+                <input type="range" id="zeroErrSlider" min="-5" max="5" value="0" oninput="updateZeroError(this.value)">
+              </div>
+            </div>
+            <div class="three-col" style="margin-top:1rem">
+              <div>
+                <div class="reading-label">Main Scale Reading (MSR)</div>
+                <div class="reading" id="msrDisplay">12 mm</div>
+              </div>
+              <div>
+                <div class="reading-label">Vernier Scale Reading (VSR)</div>
+                <div class="reading" id="vsrDisplay">4 div</div>
+              </div>
+              <div>
+                <div class="reading-label">Total Reading</div>
+                <div class="reading" id="totalV" style="color:var(--accent)">12.4 mm</div>
+              </div>
+            </div>
+            <div class="result-box">
+              <div class="result-label">Corrected Reading (after zero error)</div>
+              <span class="result-value" id="correctedV">12.4</span><span class="result-unit">mm</span>
+            </div>
+            <div style="margin-top:1rem">
+              <button class="btn btn-primary" onclick="recordVernierReading()">Record Observation</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 4: Screw Gauge Sim -->
+      <div class="tab-content" id="exp1-tab4">
+        <div class="panel">
+          <div class="panel-header">Interactive Screw Gauge Simulation (0–25 mm)</div>
+          <div class="panel-body">
+            <canvas id="screwCanvas" height="230"></canvas>
+            <div style="margin-top:1.5rem">
+              <div class="control-group">
+                <div class="control-label">
+                  <span>Object Thickness (0–25 mm)</span>
+                  <span class="control-value" id="screwPos">2.45 mm</span>
+                </div>
+                <input type="range" id="screwSlider" min="0" max="2499" value="245" oninput="updateScrew(this.value)">
+              </div>
+              <div class="control-group">
+                <div class="control-label"><span>Zero Error (head scale div)</span><span class="control-value" id="zeroErrorS">0 div</span></div>
+                <input type="range" id="zeroErrSScroll" min="-5" max="5" value="0" oninput="updateZeroErrorS(this.value)">
+              </div>
+            </div>
+            <div class="three-col" style="margin-top:1rem">
+              <div>
+                <div class="reading-label">Pitch Scale Reading (PSR)</div>
+                <div class="reading" id="psrDisplay">2 mm</div>
+              </div>
+              <div>
+                <div class="reading-label">Head Scale Reading (HSR)</div>
+                <div class="reading" id="hsrDisplay">45 div</div>
+              </div>
+              <div>
+                <div class="reading-label">Total Reading</div>
+                <div class="reading" id="totalS" style="color:var(--accent)">2.45 mm</div>
+              </div>
+            </div>
+            <div class="result-box">
+              <div class="result-label">Corrected Reading (after zero error)</div>
+              <span class="result-value" id="correctedS">2.45</span><span class="result-unit">mm</span>
+            </div>
+            <div style="margin-top:1rem">
+              <button class="btn btn-primary" onclick="recordScrewReading()">Record Observation</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 5: Spectrometer -->
+      <div class="tab-content" id="exp1-tab5">
+        <div class="panel">
+          <div class="panel-header">Spectrometer Simulation</div>
+          <div class="panel-body">
+            <div class="info-callout">
+              <strong>Principle:</strong> A spectrometer measures angles of diffracted or refracted light. The refractive index of a prism is found from: n = sin((A+D)/2) / sin(A/2), where A is the prism angle and D is the angle of minimum deviation.
+            </div>
+            <canvas id="spectrometerCanvas" height="280"></canvas>
+            <div style="margin-top:1.5rem">
+              <div class="two-col">
+                <div>
+                  <div class="control-group">
+                    <div class="control-label"><span>Prism Angle A (degrees)</span><span class="control-value" id="prismAngleDisplay">60°</span></div>
+                    <input type="range" id="prismAngleSlider" min="30" max="75" value="60" oninput="updateSpectrometer()">
+                  </div>
+                  <div class="control-group">
+                    <div class="control-label"><span>Angle of Deviation D (degrees)</span><span class="control-value" id="deviationDisplay">40°</span></div>
+                    <input type="range" id="deviationSlider" min="20" max="70" value="40" oninput="updateSpectrometer()">
+                  </div>
+                  <div class="control-group">
+                    <div class="control-label"><span>Telescope Angle (left vernier)</span><span class="control-value" id="telesAngleDisplay">0°</span></div>
+                    <input type="range" id="telesAngleSlider" min="0" max="359" value="0" oninput="updateSpectrometer()">
+                  </div>
+                </div>
+                <div>
+                  <div class="three-col" style="margin-top:0">
+                    <div style="grid-column:1/-1">
+                      <div class="reading-label">Left Vernier Reading</div>
+                      <div class="reading" id="spectLeftReading">120° 0'</div>
+                    </div>
+                    <div style="grid-column:1/-1">
+                      <div class="reading-label">Right Vernier Reading</div>
+                      <div class="reading" id="spectRightReading">300° 0'</div>
+                    </div>
+                  </div>
+                  <div class="result-box" style="margin-top:0.75rem">
+                    <div class="result-label">Refractive Index n</div>
+                    <span class="result-value" id="spectResult">—</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top:1rem">
+              <button class="btn btn-primary" onclick="recordSpectrometerReading()">Record Observation</button>
+            </div>
+            <div style="margin-top:1.5rem">
+              <table class="data-table" id="spectTable">
+                <thead><tr><th>#</th><th>Prism Angle A</th><th>Deviation D</th><th>Left Vernier</th><th>Right Vernier</th><th>n</th></tr></thead>
+                <tbody id="spectTableBody"><tr><td colspan="6" style="text-align:center;color:var(--text3);padding:1rem">No readings recorded</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 6: Travelling Microscope -->
+      <div class="tab-content" id="exp1-tab6">
+        <div class="panel">
+          <div class="panel-header">Travelling Microscope Simulation</div>
+          <div class="panel-body">
+            <div class="info-callout">
+              <strong>Principle:</strong> A travelling microscope measures small distances by recording the reading when cross-wire is on point A, then moving to point B and recording again. Length = Final − Initial reading. LC = 0.001 cm.
+            </div>
+            <canvas id="tmCanvas" height="260"></canvas>
+            <div style="margin-top:1.5rem">
+              <div class="two-col">
+                <div>
+                  <div class="control-group">
+                    <div class="control-label"><span>Microscope Position (cm)</span><span class="control-value" id="tmPosDisplay">2.450 cm</span></div>
+                    <input type="range" id="tmSlider" min="0" max="10000" value="2450" oninput="updateTM(this.value)">
+                  </div>
+                  <div class="control-group">
+                    <div class="control-label"><span>Object Type</span></div>
+                    <select id="tmObjectSelect" onchange="updateTM(document.getElementById('tmSlider').value)">
+                      <option value="wire">Wire/Thread</option>
+                      <option value="meniscus">Liquid Meniscus</option>
+                      <option value="slit">Slit/Gap</option>
+                    </select>
+                  </div>
+                  <div class="two-col" style="margin-top:0.5rem">
+                    <div>
+                      <div class="reading-label">Main Scale (cm)</div>
+                      <div class="reading" id="tmMSR">2 cm</div>
+                    </div>
+                    <div>
+                      <div class="reading-label">Vernier (div)</div>
+                      <div class="reading" id="tmVSR">450</div>
+                    </div>
+                  </div>
+                  <div class="result-box" style="margin-top:0.75rem">
+                    <div class="result-label">Total Reading</div>
+                    <span class="result-value" id="tmTotal">2.450</span><span class="result-unit">cm</span>
+                  </div>
+                </div>
+                <div>
+                  <div style="font-size:0.8rem;font-weight:600;color:var(--text2);margin-bottom:0.75rem">Point Recording</div>
+                  <div style="margin-bottom:0.75rem">
+                    <button class="btn" onclick="recordTMPoint('A')" style="width:100%;margin-bottom:0.5rem">Set Point A (Initial)</button>
+                    <button class="btn" onclick="recordTMPoint('B')" style="width:100%">Set Point B (Final)</button>
+                  </div>
+                  <div>
+                    <div class="reading-label">Point A</div>
+                    <div class="reading" id="tmPointA">Not set</div>
+                    <div class="reading-label">Point B</div>
+                    <div class="reading" id="tmPointB">Not set</div>
+                    <div class="reading-label">Distance (B − A)</div>
+                    <div class="reading" id="tmDistance" style="color:var(--accent)">—</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div style="margin-top:1rem">
+              <button class="btn btn-primary" onclick="recordTMReading()">Record Measurement</button>
+            </div>
+            <div style="margin-top:1.5rem">
+              <table class="data-table" id="tmTable">
+                <thead><tr><th>#</th><th>Point A (cm)</th><th>Point B (cm)</th><th>Length (cm)</th></tr></thead>
+                <tbody id="tmTableBody"><tr><td colspan="4" style="text-align:center;color:var(--text3);padding:1rem">No readings recorded</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 7: Observations -->
+      <div class="tab-content" id="exp1-tab7">
+        <div class="panel">
+          <div class="panel-header">Observation Table</div>
+          <div class="panel-body">
+            <div style="margin-bottom:1rem;font-size:0.8rem;color:var(--text3)"><span class="obs-led"></span>Recording live observations from simulation</div>
+            <div style="font-weight:500;margin-bottom:0.5rem;font-size:0.85rem;color:var(--text2)">Vernier Caliper Readings</div>
+            <table class="data-table" id="vernierTable">
+              <thead><tr><th>#</th><th>MSR (mm)</th><th>VSR (div)</th><th>Total (mm)</th><th>Corrected (mm)</th></tr></thead>
+              <tbody><tr><td colspan="5" style="text-align:center;color:var(--text3);padding:1rem">No readings recorded yet</td></tr></tbody>
+            </table>
+            <div style="font-weight:500;margin:1.5rem 0 0.5rem;font-size:0.85rem;color:var(--text2)">Screw Gauge Readings</div>
+            <table class="data-table" id="screwTable">
+              <thead><tr><th>#</th><th>PSR (mm)</th><th>HSR (div)</th><th>Total (mm)</th><th>Corrected (mm)</th></tr></thead>
+              <tbody><tr><td colspan="5" style="text-align:center;color:var(--text3);padding:1rem">No readings recorded yet</td></tr></tbody>
+            </table>
+            <div id="exp1Result" class="result-box" style="display:none">
+              <div class="result-label">Mean Vernier Reading | Mean Screw Gauge Reading</div>
+              <span class="result-value" id="exp1Mean">—</span>
+            </div>
+            <div class="btn-group" style="margin-top:1rem">
+              <button class="btn" onclick="clearExp1()">Clear All</button>
+              <button class="btn btn-primary" onclick="calcExp1Mean()">Calculate Mean</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXP 2: NEWTON'S RINGS -->
+    <div id="exp2" class="experiment">
+      <div class="exp-header">
+        <div class="exp-tag">EXP — 02</div>
+        <h1 class="exp-title">Newton's Rings</h1>
+        <p class="exp-desc">Study the phenomenon of interference of light using Newton's Rings apparatus and determine the radius of curvature of a plano-convex lens.</p>
+      </div>
+
+      <div class="step-tabs">
+        <button class="step-tab active" onclick="switchTab('exp2',1)"><span class="step-num">1</span> Theory</button>
+        <button class="step-tab" onclick="switchTab('exp2',2)"><span class="step-num">2</span> Procedure</button>
+        <button class="step-tab" onclick="switchTab('exp2',3)"><span class="step-num">3</span> Simulation</button>
+        <button class="step-tab" onclick="switchTab('exp2',4)"><span class="step-num">4</span> Measurement</button>
+        <button class="step-tab" onclick="switchTab('exp2',5)"><span class="step-num">5</span> Result</button>
+      </div>
+
+      <div class="tab-content active" id="exp2-tab1">
+        <div class="info-callout">
+          <strong>Principle:</strong> Newton's Rings are formed by the interference of light waves reflected from the upper and lower surfaces of the air wedge formed between a plano-convex lens and a flat glass plate.
+        </div>
+        <div class="two-col">
+          <div class="panel">
+            <div class="panel-header">Theory</div>
+            <div class="panel-body">
+              <p style="font-size:0.875rem;color:var(--text2);line-height:1.7;margin-bottom:1rem">When a plano-convex lens is placed on a flat glass plate with the curved surface down, an air film of gradually increasing thickness is formed. Monochromatic light incident on this system produces alternate bright and dark concentric rings.</p>
+              <div class="formula">D²ₙ = 4nλR</div>
+              <p style="font-size:0.8rem;color:var(--text3);line-height:1.7">For dark rings: <strong style="color:var(--accent4)">Dₙ²= 4nλR</strong><br>Dₙ = diameter of nth dark ring, λ = wavelength, R = radius of curvature</p>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">Radius of Curvature Formula</div>
+            <div class="panel-body">
+              <div class="formula" style="font-size:1rem">R = (D²ₘ − D²ₙ) / 4(m−n)λ</div>
+              <div style="margin-top:1rem">
+                <table class="data-table">
+                  <tr><td style="color:var(--text3)">Dₘ</td><td class="highlight">Diameter of mth dark ring</td></tr>
+                  <tr><td style="color:var(--text3)">Dₙ</td><td class="highlight">Diameter of nth dark ring</td></tr>
+                  <tr><td style="color:var(--text3)">λ</td><td class="highlight">Wavelength of light used</td></tr>
+                  <tr><td style="color:var(--text3)">R</td><td class="highlight">Radius of curvature (to find)</td></tr>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="exp2-tab2">
+        <div class="panel">
+          <div class="panel-header">Procedure</div>
+          <div class="panel-body">
+            <div class="procedure">
+              <div class="proc-step"><div class="proc-num">1</div><div class="proc-text">Clean the plano-convex lens and the flat glass plate. Place the lens with its curved surface on the glass plate.</div></div>
+              <div class="proc-step"><div class="proc-num">2</div><div class="proc-text">Place the arrangement in the sodium lamp light path. Adjust the 45° inclined glass plate to make the light fall normally on the lens.</div></div>
+              <div class="proc-step"><div class="proc-num">3</div><div class="proc-text">Look through the traveling microscope and locate the interference rings. Focus until the rings are sharp and clear.</div></div>
+              <div class="proc-step"><div class="proc-num">4</div><div class="proc-text">Move the microscope cross-wire to the extreme left. Record the micrometer reading at each dark ring while moving to the right.</div></div>
+              <div class="proc-step"><div class="proc-num">5</div><div class="proc-text">Continue recording readings for rings n, n+1, ... m on both sides of the center.</div></div>
+              <div class="proc-step"><div class="proc-num">6</div><div class="proc-text">Calculate diameters: D = (right reading) − (left reading) for each ring.</div></div>
+              <div class="proc-step"><div class="proc-num">7</div><div class="proc-text">Use the formula R = (Dₘ² − Dₙ²) / 4(m−n)λ to calculate the radius of curvature.</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="exp2-tab3">
+        <div class="panel">
+          <div class="panel-header">Newton's Rings Simulation</div>
+          <div class="panel-body">
+            <div style="text-align:center;margin-bottom:1.5rem">
+              <canvas id="newtonsCanvas" width="400" height="400" style="width:min(400px,100%);height:auto;border-radius:50%;border:2px solid var(--border2);margin:0 auto;display:block;background:#fdfaf5"></canvas>
+            </div>
+            <div class="two-col">
+              <div>
+                <div class="control-group">
+                  <div class="control-label"><span>Wavelength (λ)</span><span class="control-value" id="wlDisplay">589 nm</span></div>
+                  <input type="range" id="wlSlider" min="380" max="750" value="589" oninput="drawNewtonsRings()">
+                </div>
+                <div class="control-group">
+                  <div class="control-label"><span>Radius of Curvature (R)</span><span class="control-value" id="rDisplay">1.00 m</span></div>
+                  <input type="range" id="rSlider" min="50" max="300" value="100" oninput="drawNewtonsRings()">
+                </div>
+                <div class="control-group">
+                  <div class="control-label"><span>Number of Rings</span><span class="control-value" id="nrDisplay">15</span></div>
+                  <input type="range" id="nrSlider" min="5" max="25" value="15" oninput="drawNewtonsRings()">
+                </div>
+              </div>
+              <div>
+                <div class="panel" style="margin:0">
+                  <div class="panel-header" style="font-size:0.78rem">Ring Diameters (calculated)</div>
+                  <div style="max-height:200px;overflow-y:auto;padding:0.75rem">
+                    <table class="data-table" id="ringDiamTable" style="font-size:0.75rem">
+                      <thead><tr><th>Ring n</th><th>Diameter (mm)</th></tr></thead>
+                      <tbody id="ringDiamBody"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="exp2-tab4">
+        <div class="panel">
+          <div class="panel-header">Measurement — Traveling Microscope</div>
+          <div class="panel-body">
+            <div class="info-callout" style="margin-bottom:1rem">Click the ring in the simulation on Tab 3 to get its diameter, or enter values manually below. Wavelength of sodium light λ = 589 nm</div>
+            <div class="control-group">
+              <div class="control-label"><span>Select Ring Number to Measure</span></div>
+              <input type="range" id="ringSelect" min="1" max="15" value="5" oninput="selectRing(this.value)" style="margin-bottom:0.5rem">
+              <div style="font-family:'JetBrains Mono',monospace;font-size:0.85rem;color:var(--accent)">Selected Ring: n = <span id="selRingNum">5</span></div>
+            </div>
+            <div class="two-col" style="margin-top:1rem">
+              <div>
+                <div class="reading-label">Left Reading (mm)</div>
+                <div class="reading" id="leftReading">—</div>
+              </div>
+              <div>
+                <div class="reading-label">Right Reading (mm)</div>
+                <div class="reading" id="rightReading">—</div>
+              </div>
+            </div>
+            <div class="reading-label" style="margin-top:1rem">Diameter D = Right − Left (mm)</div>
+            <div class="reading" id="diamReading" style="font-size:1.1rem;color:var(--accent)">—</div>
+            <button class="btn btn-primary" style="margin-top:1rem" onclick="recordRing()">Record Ring</button>
+
+            <div style="margin-top:1.5rem">
+              <table class="data-table" id="ringsObsTable">
+                <thead><tr><th>Ring n</th><th>D (mm)</th><th>D² (mm²)</th></tr></thead>
+                <tbody id="ringsObsBody"><tr><td colspan="3" style="text-align:center;color:var(--text3);padding:1rem">No rings recorded</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="exp2-tab5">
+        <div class="panel">
+          <div class="panel-header">Result — Radius of Curvature</div>
+          <div class="panel-body">
+            <div class="control-group">
+              <div class="control-label"><span>Ring m (larger ring)</span><span class="control-value" id="ringMVal">15</span></div>
+              <input type="range" id="ringMSlider" min="10" max="20" value="15" oninput="calcR()">
+            </div>
+            <div class="control-group">
+              <div class="control-label"><span>Ring n (smaller ring)</span><span class="control-value" id="ringNVal">5</span></div>
+              <input type="range" id="ringNSlider" min="1" max="9" value="5" oninput="calcR()">
+            </div>
+            <div class="two-col" style="margin-top:1rem">
+              <div>
+                <div class="reading-label">Dm² − Dn²</div>
+                <div class="reading" id="diffD2">—</div>
+              </div>
+              <div>
+                <div class="reading-label">4(m−n)λ</div>
+                <div class="reading" id="denomR">—</div>
+              </div>
+            </div>
+            <div class="result-box" style="margin-top:1rem">
+              <div class="result-label">Radius of Curvature R = (Dm² − Dn²) / 4(m−n)λ</div>
+              <span class="result-value" id="rResult">—</span><span class="result-unit">m</span>
+            </div>
+            <div class="result-box" style="margin-top:1rem;background:rgba(124,92,46,0.05);border-color:rgba(124,92,46,0.20)">
+              <div class="result-label">Known R (set in simulation)</div>
+              <span class="result-value" style="color:var(--accent)" id="rKnown">—</span><span class="result-unit">m</span>
+            </div>
+            <button class="btn btn-primary" style="margin-top:1rem" onclick="calcR()">Recalculate</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXP 3: DIFFRACTION GRATING -->
+    <div id="exp3" class="experiment">
+      <div class="exp-header">
+        <div class="exp-tag">EXP — 03</div>
+        <h1 class="exp-title">Diffraction Grating</h1>
+        <p class="exp-desc">Determine the wavelength of light by studying the diffraction pattern produced by a plane diffraction grating using a spectrometer.</p>
+      </div>
+
+      <div class="step-tabs">
+        <button class="step-tab active" onclick="switchTab('exp3',1)"><span class="step-num">1</span> Theory</button>
+        <button class="step-tab" onclick="switchTab('exp3',2)"><span class="step-num">2</span> Procedure</button>
+        <button class="step-tab" onclick="switchTab('exp3',3)"><span class="step-num">3</span> Simulation</button>
+        <button class="step-tab" onclick="switchTab('exp3',4)"><span class="step-num">4</span> Observations</button>
+        <button class="step-tab" onclick="switchTab('exp3',5)"><span class="step-num">5</span> Result</button>
+      </div>
+
+      <div class="tab-content active" id="exp3-tab1">
+        <div class="info-callout">
+          <strong>Aim:</strong> To determine the wavelength of a spectral line using a plane diffraction grating by measuring the angle of diffraction at different orders.
+        </div>
+        <div class="two-col">
+          <div class="panel">
+            <div class="panel-header">Diffraction Equation</div>
+            <div class="panel-body">
+              <div class="formula" style="font-size:1.2rem">d sin θ = nλ</div>
+              <table class="data-table" style="margin-top:1rem">
+                <tr><td style="color:var(--text3)">d</td><td class="highlight">Grating element = 1/N (m)</td></tr>
+                <tr><td style="color:var(--text3)">N</td><td class="highlight">Lines per meter on grating</td></tr>
+                <tr><td style="color:var(--text3)">θ</td><td class="highlight">Angle of diffraction</td></tr>
+                <tr><td style="color:var(--text3)">n</td><td class="highlight">Order of diffraction</td></tr>
+                <tr><td style="color:var(--text3)">λ</td><td class="highlight">Wavelength of light</td></tr>
+              </table>
+              <div class="formula" style="margin-top:1rem">λ = d sin θ / n</div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">Apparatus</div>
+            <div class="panel-body">
+              <div class="procedure">
+                <div class="proc-step"><div class="proc-num">1</div><div class="proc-text">Spectrometer with collimator and telescope</div></div>
+                <div class="proc-step"><div class="proc-num">2</div><div class="proc-text">Plane diffraction grating (15000 or 6000 lines/inch)</div></div>
+                <div class="proc-step"><div class="proc-num">3</div><div class="proc-text">Mercury vapour lamp (light source)</div></div>
+                <div class="proc-step"><div class="proc-num">4</div><div class="proc-text">Spirit level for alignment</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="exp3-tab2">
+        <div class="panel">
+          <div class="panel-header">Procedure</div>
+          <div class="panel-body">
+            <div class="procedure">
+              <div class="proc-step"><div class="proc-num">1</div><div class="proc-text">Set up the spectrometer. Level it using a spirit level. Focus the collimator for parallel rays and the telescope for infinity.</div></div>
+              <div class="proc-step"><div class="proc-num">2</div><div class="proc-text">Mount the grating on the prism table with the ruled surface facing the collimator. Make the grating perpendicular to the collimator.</div></div>
+              <div class="proc-step"><div class="proc-num">3</div><div class="proc-text">Illuminate the slit with mercury lamp. Turn on the source and observe the central bright image through the telescope.</div></div>
+              <div class="proc-step"><div class="proc-num">4</div><div class="proc-text">Set the cross-wire on the central image (n=0). Note the vernier reading as the reference position (θ = 0).</div></div>
+              <div class="proc-step"><div class="proc-num">5</div><div class="proc-text">Rotate the telescope to the first order (n=1) on the left. Set the cross-wire on the spectral line. Record vernier readings V1 and V2.</div></div>
+              <div class="proc-step"><div class="proc-num">6</div><div class="proc-text">Similarly note readings for first order on the right. Angle θ = (left reading − right reading) / 2</div></div>
+              <div class="proc-step"><div class="proc-num">7</div><div class="proc-text">Repeat for second order (n=2). Calculate λ = d sinθ / n for each case and find the mean.</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="exp3-tab3">
+        <div class="panel">
+          <div class="panel-header">Diffraction Grating Simulation — Adjust and Record Observations</div>
+          <div class="panel-body">
+            <canvas id="diffCanvas" height="320"></canvas>
+            <div style="margin-top:1.5rem">
+              <div class="control-group">
+                <div class="control-label"><span>Wavelength (λ)</span><span class="control-value" id="diffWlDisplay">589 nm</span></div>
+                <input type="range" id="diffWlSlider" min="380" max="750" value="589" oninput="updateDiffraction()">
+              </div>
+              <div class="control-group">
+                <div class="control-label"><span>Grating Lines</span><span class="control-value" id="diffNDisplay">15000 lines/inch</span></div>
+                <select id="diffGratingSelect" onchange="updateDiffraction()">
+                  <option value="15000">15000 lines/inch</option>
+                  <option value="6000">6000 lines/inch</option>
+                  <option value="300">300 lines/mm</option>
+                  <option value="600">600 lines/mm</option>
+                </select>
+              </div>
+              <div class="control-group">
+                <div class="control-label"><span>Highlight Order</span><span class="control-value" id="diffOrderDisplay">n = 1</span></div>
+                <input type="range" id="diffOrderSlider" min="1" max="3" value="1" oninput="updateDiffraction()">
+              </div>
+            </div>
+            <div class="three-col" style="margin-top:1rem">
+              <div>
+                <div class="reading-label">Grating Element d</div>
+                <div class="reading" id="dDisplay">—</div>
+              </div>
+              <div>
+                <div class="reading-label">Angle θ (order n)</div>
+                <div class="reading" id="thetaDisplay">—</div>
+              </div>
+              <div>
+                <div class="reading-label">Calculated λ</div>
+                <div class="reading" id="diffLambda" style="color:var(--accent)">—</div>
+              </div>
+            </div>
+            <div style="margin-top:1.5rem;border-top:1px solid var(--border);padding-top:1.25rem">
+              <div style="font-size:0.85rem;font-weight:600;color:var(--text2);margin-bottom:1rem">Record this observation into the table:</div>
+              <div class="two-col">
+                <div>
+                  <div class="reading-label">Spectral Line Color (from simulation)</div>
+                  <select id="colorSelect" style="margin-top:0.4rem">
+                    <option value="violet" data-wl="405">Violet (405 nm)</option>
+                    <option value="blue" data-wl="436">Blue (436 nm)</option>
+                    <option value="cyan" data-wl="492">Cyan (492 nm)</option>
+                    <option value="green" data-wl="546">Green (546 nm)</option>
+                    <option value="yellow" data-wl="589">Yellow (589 nm)</option>
+                    <option value="red" data-wl="623">Red (623 nm)</option>
+                  </select>
+                </div>
+                <div>
+                  <div class="reading-label">Order of Diffraction (from simulation)</div>
+                  <select id="orderSelect" style="margin-top:0.4rem">
+                    <option value="1">First Order (n=1)</option>
+                    <option value="2">Second Order (n=2)</option>
+                    <option value="3">Third Order (n=3)</option>
+                  </select>
+                </div>
+              </div>
+              <div style="margin-top:1rem">
+                <button class="btn btn-primary" onclick="recordDiffraction()">Record Observation from Simulation</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 4: Observations with deviation -->
+      <div class="tab-content" id="exp3-tab4">
+        <div class="panel">
+          <div class="panel-header">Observation Table — With Deviation Analysis</div>
+          <div class="panel-body">
+            <div class="info-callout" style="margin-bottom:1rem">Observations are recorded from the simulation in Tab 3. This table shows calculated wavelength, actual wavelength, and percentage deviation.</div>
+            <div style="overflow-x:auto">
+              <table class="data-table" id="diffTable">
+                <thead>
+                  <tr>
+                    <th>Color</th><th>Order n</th><th>θ (°)</th><th>sin θ</th>
+                    <th>Calc. λ (nm)</th><th>Actual λ (nm)</th><th>Deviation (%)</th>
+                  </tr>
+                </thead>
+                <tbody id="diffTableBody">
+                  <tr><td colspan="7" style="text-align:center;color:var(--text3);padding:1rem">No observations recorded — use Tab 3 to record</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div id="deviationSummary" style="margin-top:1.5rem;display:none">
+              <div class="result-box">
+                <div class="result-label">Mean Deviation across all observations</div>
+                <span class="result-value" id="meanDeviation">—</span><span class="result-unit">%</span>
+              </div>
+            </div>
+            <div style="margin-top:1rem">
+              <button class="btn" onclick="clearDiffObs()">Clear Observations</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="exp3-tab5">
+        <div class="panel">
+          <div class="panel-header">Result — Final Calculations</div>
+          <div class="panel-body">
+            <canvas id="diffResultCanvas" height="220" style="margin-bottom:1.5rem"></canvas>
+            <div id="diffResultBox">
+              <div style="color:var(--text3);text-align:center;padding:1rem">Record observations in Tab 3 to see results</div>
+            </div>
+            <div id="diffFinalCalc" style="display:none;margin-top:1.5rem">
+              <div class="panel" style="margin:0">
+                <div class="panel-header" style="font-size:0.8rem">Final Corrected Wavelengths (applying deviation correction)</div>
+                <div class="panel-body">
+                  <table class="data-table" id="diffCorrectedTable">
+                    <thead><tr><th>Color</th><th>Calc. λ (nm)</th><th>Actual λ (nm)</th><th>Dev. (%)</th><th>Corrected λ (nm)</th></tr></thead>
+                    <tbody id="diffCorrectedBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            <button class="btn btn-primary" style="margin-top:1rem" onclick="calcDiffResult()">Calculate Results</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXP 4: FOUR PROBE METHOD -->
+    <div id="exp4" class="experiment">
+      <div class="exp-header">
+        <div class="exp-tag">EXP — 04</div>
+        <h1 class="exp-title">Four Probe Method</h1>
+        <p class="exp-desc">Determine the electrical resistivity of a semiconductor (Germanium) sample using the four probe method and study its variation with temperature.</p>
+      </div>
+
+      <div class="step-tabs">
+        <button class="step-tab active" onclick="switchTab('exp4',1)"><span class="step-num">1</span> Theory</button>
+        <button class="step-tab" onclick="switchTab('exp4',2)"><span class="step-num">2</span> Procedure</button>
+        <button class="step-tab" onclick="switchTab('exp4',3)"><span class="step-num">3</span> Circuit</button>
+        <button class="step-tab" onclick="switchTab('exp4',4)"><span class="step-num">4</span> Measurements</button>
+        <button class="step-tab" onclick="switchTab('exp4',5)"><span class="step-num">5</span> Result</button>
+      </div>
+
+      <div class="tab-content active" id="exp4-tab1">
+        <div class="info-callout">
+          <strong>Principle:</strong> In the four probe method, current is passed through the outer two probes and voltage is measured across the inner two probes. This eliminates contact resistance errors.
+        </div>
+        <div class="two-col">
+          <div class="panel">
+            <div class="panel-header">Theory</div>
+            <div class="panel-body">
+              <p style="font-size:0.875rem;color:var(--text2);line-height:1.7;margin-bottom:1rem">The resistivity is given by:</p>
+              <div class="formula" style="font-size:1.1rem">ρ = 2πs × (V/I) × f(W/s)</div>
+              <p style="font-size:0.8rem;color:var(--text3);line-height:1.7;margin-top:0.5rem">For large wafer (W >> s): f(W/s) ≈ 1</p>
+              <div class="formula" style="margin-top:1rem">ρ = 2πs × (V/I)</div>
+              <table class="data-table" style="margin-top:1rem">
+                <tr><td style="color:var(--text3)">ρ</td><td class="highlight">Resistivity (Ω·cm)</td></tr>
+                <tr><td style="color:var(--text3)">s</td><td class="highlight">Probe spacing (cm)</td></tr>
+                <tr><td style="color:var(--text3)">V</td><td class="highlight">Voltage across inner probes (V)</td></tr>
+                <tr><td style="color:var(--text3)">I</td><td class="highlight">Current through outer probes (A)</td></tr>
+              </table>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-header">Temperature Dependence</div>
+            <div class="panel-body">
+              <p style="font-size:0.875rem;color:var(--text2);line-height:1.7;margin-bottom:1rem">For a semiconductor, resistivity varies exponentially with temperature:</p>
+              <div class="formula">ρ = ρ₀ · exp(Eg / 2kT)</div>
+              <p style="font-size:0.8rem;color:var(--text3);line-height:1.7;margin-top:0.5rem">Taking log:</p>
+              <div class="formula">ln(ρ) = ln(ρ₀) + Eg/(2k) × (1/T)</div>
+              <p style="font-size:0.8rem;color:var(--text3);margin-top:0.5rem;line-height:1.7">A graph of ln(ρ) vs 1/T gives a straight line with slope = Eg/2k, from which band gap Eg can be found. Temperature T is in Kelvin.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="exp4-tab2">
+        <div class="panel">
+          <div class="panel-header">Procedure</div>
+          <div class="panel-body">
+            <div class="procedure">
+              <div class="proc-step"><div class="proc-num">1</div><div class="proc-text">Place the Germanium crystal sample on the insulating pad. Ensure the four probes are collinear and equally spaced (s ≈ 2mm typically).</div></div>
+              <div class="proc-step"><div class="proc-num">2</div><div class="proc-text">Connect the outer two probes (1 and 4) to the constant current source. Connect the inner two probes (2 and 3) to the millivoltmeter.</div></div>
+              <div class="proc-step"><div class="proc-num">3</div><div class="proc-text">Set the temperature of the oven to room temperature (~303 K). Allow system to stabilize.</div></div>
+              <div class="proc-step"><div class="proc-num">4</div><div class="proc-text">Set a constant current I (e.g., 5 mA) using the current source. Note the voltage V shown by the millivoltmeter.</div></div>
+              <div class="proc-step"><div class="proc-num">5</div><div class="proc-text">Calculate ρ = 2πs(V/I). Record ρ and temperature T (in Kelvin).</div></div>
+              <div class="proc-step"><div class="proc-num">6</div><div class="proc-text">Increase temperature by 10 K steps up to ~453 K. Record V and I at each temperature step.</div></div>
+              <div class="proc-step"><div class="proc-num">7</div><div class="proc-text">Plot ln(ρ) vs 1/T (K⁻¹). Calculate band gap from slope: Eg = 2k × slope.</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="exp4-tab3">
+        <div class="panel">
+          <div class="panel-header">Four Probe Circuit Diagram</div>
+          <div class="panel-body">
+            <canvas id="circuitCanvas" height="300"></canvas>
+            <div style="margin-top:1rem;text-align:center;font-size:0.8rem;color:var(--text3)">Interactive circuit — hover over components for details</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="exp4-tab4">
+        <div class="panel">
+          <div class="panel-header">Temperature Measurement Simulation (Temperature in Kelvin)</div>
+          <div class="panel-body">
+            <div class="two-col">
+              <div>
+                <div class="control-group">
+                  <div class="control-label"><span>Temperature (K)</span><span class="control-value" id="tempDisplay">303 K</span></div>
+                  <input type="range" id="tempSlider" min="303" max="453" value="303" oninput="updateFourProbe()">
+                </div>
+                <div class="control-group">
+                  <div class="control-label"><span>Current I (mA)</span><span class="control-value" id="currDisplay">5.00 mA</span></div>
+                  <input type="range" id="currSlider" min="1" max="20" value="5" step="0.5" oninput="updateFourProbe()">
+                </div>
+                <div class="control-group">
+                  <div class="control-label"><span>Probe Spacing s (mm)</span><span class="control-value" id="spaceDisplay">2.0 mm</span></div>
+                  <input type="range" id="spaceSlider" min="1" max="5" value="2" step="0.5" oninput="updateFourProbe()">
+                </div>
+                <div class="two-col" style="margin-top:0.5rem">
+                  <div>
+                    <div class="reading-label">Voltage V</div>
+                    <div class="reading" id="voltDisplay">—</div>
+                  </div>
+                  <div>
+                    <div class="reading-label">Resistivity ρ</div>
+                    <div class="reading" id="rhoDisplay">—</div>
+                  </div>
+                </div>
+                <button class="btn btn-primary" style="margin-top:1rem" onclick="recordFourProbe()">Record Reading</button>
+              </div>
+              <div>
+                <canvas id="fourProbeCanvas" height="220" style="border-radius:8px;background:#fdfaf5"></canvas>
+              </div>
+            </div>
+            <div style="margin-top:1.5rem;overflow-x:auto">
+              <table class="data-table" id="fpTable">
+                <thead><tr><th>T (K)</th><th>1/T (K⁻¹)</th><th>V (mV)</th><th>I (mA)</th><th>ρ (Ω·cm)</th><th>ln(ρ)</th></tr></thead>
+                <tbody id="fpBody"><tr><td colspan="6" style="text-align:center;color:var(--text3);padding:1rem">No readings recorded</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="exp4-tab5">
+        <div class="panel">
+          <div class="panel-header">ln(ρ) vs 1/T Graph and Band Gap Calculation</div>
+          <div class="panel-body">
+            <canvas id="bandGapCanvas" height="300" style="margin-bottom:1.5rem;background:#fdfaf5"></canvas>
+            <div id="bandGapResult">
+              <div style="color:var(--text3);text-align:center;padding:1rem">Record at least 3 temperatures in Tab 4 to see the graph and calculate band gap</div>
+            </div>
+            <div class="btn-group" style="margin-top:1rem">
+              <button class="btn" onclick="clearFP()">Clear Data</button>
+              <button class="btn btn-primary" onclick="calcBandGap()">Calculate Band Gap</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TEAM PAGE -->
+    <div id="team" class="experiment">
+      <div class="team-page">
+        <div class="team-hero">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--text3);letter-spacing:3px;margin-bottom:0.75rem;text-transform:uppercase">Virtual Physics Laboratory</div>
+          <div class="team-title">Meet the Team</div>
+          <div class="team-subtitle">The minds behind PhysicsLab</div>
+        </div>
+
+        <div class="team-grid">
+          <div class="team-card">
+            <div class="team-avatar" style="background:linear-gradient(135deg,#7c5c2e,#b07d2a)">SD</div>
+            <div class="team-name">Siya Dubey</div>
+            <div class="team-role">Team Member</div>
+          </div>
+          <div class="team-card">
+            <div class="team-avatar" style="background:linear-gradient(135deg,#6b5b95,#9b8bbf)">RJ</div>
+            <div class="team-name">Radnyee Jagtap</div>
+            <div class="team-role">Team Member</div>
+          </div>
+          <div class="team-card">
+            <div class="team-avatar" style="background:linear-gradient(135deg,#3a7d5e,#5aad8e)">NL</div>
+            <div class="team-name">Nakshatra Lalwani</div>
+            <div class="team-role">Team Member</div>
+          </div>
+          <div class="team-card">
+            <div class="team-avatar" style="background:linear-gradient(135deg,#b85c2a,#e07a4a)">SG</div>
+            <div class="team-name">Shravan Ganjewar</div>
+            <div class="team-role">Team Member</div>
+          </div>
+        </div>
+
+        <div style="margin-top:2rem">
+          <div style="font-size:0.7rem;letter-spacing:2px;text-transform:uppercase;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-bottom:1rem">Project Guidance</div>
+          <div class="guide-card">
+            <div class="guide-avatar">DA</div>
+            <div class="guide-info">
+              <div class="guide-label">Under the Guidance of</div>
+              <div class="guide-name">Mr. Dattatraya A. Anarse</div>
+              <div class="guide-dept">Faculty Advisor — Physics Department</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:3rem;text-align:center;padding:2rem;border-top:1px solid var(--border)">
+          <div style="font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--text2);margin-bottom:0.5rem;font-style:italic">"The important thing is to not stop questioning."</div>
+          <div style="font-size:0.78rem;color:var(--text3);font-family:'JetBrains Mono',monospace">— Albert Einstein</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ═══════════════════════════════ NAVIGATION ═══════════════════════════════
+function showExp(id) {
+  document.querySelectorAll('.experiment').forEach(e => e.classList.remove('active'));
+  document.querySelectorAll('.exp-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.exp-btn').forEach(b => {
+    if(b.getAttribute('onclick') && b.getAttribute('onclick').includes("'"+id+"'")) b.classList.add('active');
+  });
+  if(id==='exp2') { drawNewtonsRings(); calcR(); }
+  if(id==='exp3') { updateDiffraction(); }
+  if(id==='exp4') { drawCircuit(); updateFourProbe(); }
+  if(id==='exp1') { updateVernier(document.getElementById('vernierSlider').value); updateScrew(document.getElementById('screwSlider').value); }
+}
+
+function switchTab(expId, tabNum) {
+  const tabs = document.querySelectorAll(`#${expId} .tab-content`);
+  const tabContainer = document.getElementById(expId);
+  const btns = tabContainer.querySelectorAll('.step-tab');
+  tabs.forEach(t => t.classList.remove('active'));
+  btns.forEach(b => b.classList.remove('active'));
+  document.getElementById(`${expId}-tab${tabNum}`).classList.add('active');
+  btns[tabNum-1].classList.add('active');
+  if(expId==='exp2' && tabNum===3) drawNewtonsRings();
+  if(expId==='exp3' && tabNum===3) updateDiffraction();
+  if(expId==='exp4' && tabNum===3) drawCircuit();
+  if(expId==='exp4' && tabNum===4) drawFourProbeGraph();
+  if(expId==='exp1' && tabNum===3) { updateVernier(document.getElementById('vernierSlider').value); }
+  if(expId==='exp1' && tabNum===4) { updateScrew(document.getElementById('screwSlider').value); }
+  if(expId==='exp1' && tabNum===5) { updateSpectrometer(); }
+  if(expId==='exp1' && tabNum===6) { updateTM(document.getElementById('tmSlider').value); }
+}
+
+// ═══════════════════════════════ EXP 1: VERNIER CALIPER ═══════════════════════════════
+let vernierZeroErr = 0, screwZeroErr = 0;
+let vernierObs = [], screwObs = [];
+
+function updateVernier(val) {
+  val = parseInt(val);
+  // val is in units of 0.1mm, range 0-490 => 0.0 to 49.0 mm
+  const lc = 0.1; // mm
+  const totalMM = val * 0.1;
+  const msr = Math.floor(totalMM); // integer mm
+  const vsr = Math.round((totalMM - msr) / lc); // 0-9
+  const total = msr + vsr * lc;
+  const zeroErrVal = vernierZeroErr * lc;
+  const corrected = total - zeroErrVal;
+  document.getElementById('vernierPos').textContent = corrected.toFixed(1) + ' mm';
+  document.getElementById('msrDisplay').textContent = msr + ' mm';
+  document.getElementById('vsrDisplay').textContent = vsr + ' div';
+  document.getElementById('totalV').textContent = total.toFixed(1) + ' mm';
+  document.getElementById('correctedV').textContent = corrected.toFixed(1);
+  drawVernier(msr, vsr, totalMM);
+}
+
+function updateZeroError(val) {
+  vernierZeroErr = parseInt(val);
+  document.getElementById('zeroErrorV').textContent = val + ' div';
+  updateVernier(document.getElementById('vernierSlider').value);
+}
+
+function drawVernier(msr, vsr, totalMM) {
+  const canvas = document.getElementById('vernierCanvas');
+  if(!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  const displayW = canvas.offsetWidth;
+  const displayH = 220;
+  canvas.width = displayW * dpr;
+  canvas.height = displayH * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const W = displayW, H = displayH;
+
+  // Background
+  ctx.fillStyle = '#faf6f0';
+  ctx.fillRect(0, 0, W, H);
+
+  const scaleX = 40;
+  const mainScaleY = 60;
+  const scaleH = 50;
+  // Show 0-50mm range; width available
+  const mmWidth = (W - 80) / 50; // pixels per mm
+
+  // Fixed jaw (left)
+  ctx.fillStyle = '#c9b49a';
+  ctx.strokeStyle = '#8b6d46';
+  ctx.lineWidth = 1.5;
+  // Upper jaw body
+  roundRect(ctx, scaleX - 10, mainScaleY - 30, 18, scaleH + 40, 4);
+  ctx.fillStyle = '#c9b49a'; ctx.fill(); ctx.stroke();
+  // Fixed jaw tip
+  ctx.fillStyle = '#b8a288';
+  ctx.fillRect(scaleX - 10, mainScaleY + scaleH - 10, 18, 25);
+  ctx.strokeRect(scaleX - 10, mainScaleY + scaleH - 10, 18, 25);
+
+  // Main scale bar
+  const barW = 50 * mmWidth + 30;
+  ctx.fillStyle = '#e8dfd0';
+  roundRect(ctx, scaleX, mainScaleY, barW, scaleH, 4);
+  ctx.fillStyle = '#e8dfd0'; ctx.fill();
+  ctx.strokeStyle = '#8b6d46'; ctx.lineWidth = 1.5; ctx.stroke();
+
+  // Main scale ticks (0 to 50mm)
+  ctx.save();
+  for(let i = 0; i <= 50; i++) {
+    const x = scaleX + i * mmWidth;
+    const isMajor = i % 10 === 0;
+    const isMed = i % 5 === 0;
+    const tickH = isMajor ? 28 : isMed ? 18 : 10;
+    ctx.beginPath();
+    ctx.moveTo(x, mainScaleY);
+    ctx.lineTo(x, mainScaleY + tickH);
+    ctx.strokeStyle = isMajor ? '#5a3e28' : isMed ? '#8b6d46' : '#b8a070';
+    ctx.lineWidth = isMajor ? 1.5 : 0.8;
+    ctx.stroke();
+    if(isMajor) {
+      ctx.fillStyle = '#5a3e28';
+      ctx.font = `bold 10px JetBrains Mono`;
+      ctx.textAlign = 'center';
+      ctx.fillText(i, x, mainScaleY + 40);
+    }
+  }
+  // mm label
+  ctx.fillStyle = '#9a8470';
+  ctx.font = '9px Space Grotesk';
+  ctx.textAlign = 'left';
+  ctx.fillText('mm', scaleX + barW - 15, mainScaleY + 48);
+  ctx.restore();
+
+  // Moving jaw and vernier scale
+  const jawOffset = msr * mmWidth; // pixel offset for MSR
+  const vernierW = 10 * mmWidth * 0.9; // vernier covers 9mm for 10 divisions
+  const vernierX = scaleX + jawOffset;
+
+  // Moving jaw body
+  ctx.fillStyle = '#d4c4b0';
+  ctx.strokeStyle = '#7c5c2e';
+  ctx.lineWidth = 1.5;
+  roundRect(ctx, vernierX, mainScaleY - 30, 18, scaleH + 40, 4);
+  ctx.fill(); ctx.stroke();
+  // Moving jaw tip (below scale)
+  ctx.fillStyle = '#c0aa90';
+  ctx.fillRect(vernierX, mainScaleY + scaleH - 10, 18, 25);
+  ctx.strokeRect(vernierX, mainScaleY + scaleH - 10, 18, 25);
+
+  // Vernier scale plate (below main scale)
+  const vPlateY = mainScaleY + scaleH + 5;
+  ctx.fillStyle = '#f0e8d8';
+  roundRect(ctx, vernierX - 5, vPlateY, vernierW + 15, 40, 3);
+  ctx.fill();
+  ctx.strokeStyle = '#7c5c2e'; ctx.lineWidth = 1; ctx.stroke();
+
+  // Vernier ticks (10 divisions over 9 main scale mm)
+  const vernierDivW = (9 * mmWidth) / 10; // each vernier division
+  for(let i = 0; i <= 10; i++) {
+    const x = vernierX + i * vernierDivW;
+    const isCoinc = (i === vsr);
+    const tickH = i % 5 === 0 ? 22 : 13;
+    ctx.beginPath();
+    ctx.moveTo(x, vPlateY);
+    ctx.lineTo(x, vPlateY + tickH);
+    ctx.strokeStyle = isCoinc ? '#b85c2a' : '#7c5c2e';
+    ctx.lineWidth = isCoinc ? 2.5 : 0.8;
+    ctx.stroke();
+    if(i % 5 === 0) {
+      ctx.fillStyle = '#5a3e28';
+      ctx.font = '9px JetBrains Mono';
+      ctx.textAlign = 'center';
+      ctx.fillText(i, x, vPlateY + 34);
+    }
+    if(isCoinc) {
+      // Highlight coincidence
+      ctx.fillStyle = 'rgba(184,92,42,0.15)';
+      ctx.fillRect(x - 4, vPlateY, 8, 22);
+      // Arrow
+      ctx.fillStyle = '#b85c2a';
+      ctx.beginPath();
+      ctx.moveTo(x, vPlateY - 6);
+      ctx.lineTo(x - 5, vPlateY - 13);
+      ctx.lineTo(x + 5, vPlateY - 13);
+      ctx.closePath(); ctx.fill();
+    }
+  }
+
+  // Reference line on main scale
+  ctx.beginPath();
+  ctx.moveTo(vernierX, mainScaleY);
+  ctx.lineTo(vernierX, mainScaleY + scaleH);
+  ctx.strokeStyle = 'rgba(184,92,42,0.5)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([3, 3]);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Label
+  ctx.fillStyle = '#5a3e28';
+  ctx.font = 'bold 12px JetBrains Mono';
+  ctx.textAlign = 'right';
+  ctx.fillText(`MSR: ${msr} mm  |  VSR: ${vsr}  |  Total: ${totalMM.toFixed(1)} mm`, W - 15, H - 8);
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+function recordVernierReading() {
+  const val = parseInt(document.getElementById('vernierSlider').value);
+  const totalMM = val * 0.1;
+  const msr = Math.floor(totalMM);
+  const vsr = Math.round((totalMM - msr) / 0.1);
+  const total = msr + vsr * 0.1;
+  const corrected = total - vernierZeroErr * 0.1;
+  vernierObs.push({ msr, vsr, total: total.toFixed(1), corrected: corrected.toFixed(1) });
+  refreshVernierTable();
+}
+
+function refreshVernierTable() {
+  const tbody = document.querySelector('#vernierTable tbody');
+  if(!vernierObs.length) { tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:1rem">No readings recorded yet</td></tr>'; return; }
+  tbody.innerHTML = vernierObs.map((r,i)=>`<tr><td>${i+1}</td><td>${r.msr}</td><td>${r.vsr}</td><td>${r.total}</td><td class="highlight">${r.corrected}</td></tr>`).join('');
+}
+
+// ═══════════════════════════════ EXP 1: SCREW GAUGE ═══════════════════════════════
+function updateScrew(val) {
+  val = parseInt(val);
+  // val: 0-2499 => 0.00 to 24.99 mm (0.01mm resolution)
+  const lc = 0.01; // mm
+  const totalMM = val * 0.01;
+  const psr = Math.floor(totalMM); // integer mm on pitch scale (0-24)
+  // Each full mm = one full rotation. Head scale reading = fractional part * 100
+  const hsr = Math.round((totalMM - psr) * 100); // 0-99 divisions
+  const total = psr + hsr * 0.01;
+  const corrected = total - screwZeroErr * 0.01;
+  document.getElementById('screwPos').textContent = corrected.toFixed(2) + ' mm';
+  document.getElementById('psrDisplay').textContent = psr + ' mm';
+  document.getElementById('hsrDisplay').textContent = hsr + ' div';
+  document.getElementById('totalS').textContent = total.toFixed(2) + ' mm';
+  document.getElementById('correctedS').textContent = corrected.toFixed(2);
+  drawScrew(psr, hsr, totalMM);
+}
+
+function updateZeroErrorS(val) {
+  screwZeroErr = parseInt(val);
+  document.getElementById('zeroErrorS').textContent = val + ' div';
+  updateScrew(document.getElementById('screwSlider').value);
+}
+
+function drawScrew(psr, hsr, totalMM) {
+  const canvas = document.getElementById('screwCanvas');
+  if(!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  const displayW = canvas.offsetWidth;
+  const displayH = 230;
+  canvas.width = displayW * dpr;
+  canvas.height = displayH * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const W = displayW, H = displayH;
+
+  ctx.fillStyle = '#faf6f0';
+  ctx.fillRect(0, 0, W, H);
+
+  // Frame / U-shaped body
+  const frameX = 20, frameY = 30;
+  const frameW = W * 0.42, frameH = H - 60;
+  ctx.fillStyle = '#d4c4b0';
+  ctx.strokeStyle = '#8b6d46';
+  ctx.lineWidth = 2;
+  // Left vertical
+  ctx.fillRect(frameX, frameY, 18, frameH);
+  ctx.strokeRect(frameX, frameY, 18, frameH);
+  // Bottom horizontal
+  ctx.fillRect(frameX, frameY + frameH - 18, frameW, 18);
+  ctx.strokeRect(frameX, frameY + frameH - 18, frameW, 18);
+  // Anvil (fixed end)
+  ctx.fillStyle = '#b8a070';
+  ctx.fillRect(frameX, frameY + frameH/2 - 12, 18, 24);
+  ctx.strokeRect(frameX, frameY + frameH/2 - 12, 18, 24);
+  ctx.fillStyle = '#5a3e28';
+  ctx.font = '8px Space Grotesk';
+  ctx.textAlign = 'center';
+  ctx.fillText('Anvil', frameX + 9, frameY + frameH/2 + 26);
+
+  // Barrel (horizontal sleeve)
+  const barrelX = frameX + frameW * 0.35;
+  const barrelY = frameY + frameH / 2 - 18;
+  const barrelW = W * 0.38;
+  const barrelH = 36;
+  ctx.fillStyle = '#e0d4c0';
+  roundRect(ctx, barrelX, barrelY, barrelW, barrelH, 6);
+  ctx.fill();
+  ctx.strokeStyle = '#7c5c2e'; ctx.lineWidth = 1.5; ctx.stroke();
+
+  // Pitch scale on barrel (0 to 25mm, each mm has half marks)
+  // Show visible portion around psr
+  const mmPerPx = barrelW / 12; // show 12mm window
+  const startMM = Math.max(0, psr - 3);
+  ctx.save();
+  ctx.rect(barrelX + 2, barrelY, barrelW - 4, barrelH);
+  ctx.clip();
+  for(let m = 0; m <= 25; m++) {
+    const xPos = barrelX + (m - startMM) * mmPerPx;
+    if(xPos < barrelX - 5 || xPos > barrelX + barrelW + 5) continue;
+    // Full mm mark
+    ctx.beginPath();
+    ctx.moveTo(xPos, barrelY);
+    ctx.lineTo(xPos, barrelY + 22);
+    ctx.strokeStyle = '#5a3e28';
+    ctx.lineWidth = m === psr ? 2 : 1;
+    ctx.stroke();
+    ctx.fillStyle = '#5a3e28';
+    ctx.font = `${m === psr ? 'bold ' : ''}9px JetBrains Mono`;
+    ctx.textAlign = 'center';
+    ctx.fillText(m, xPos, barrelY + 32);
+    // Half mm mark
+    const xHalf = barrelX + (m + 0.5 - startMM) * mmPerPx;
+    if(xHalf > barrelX && xHalf < barrelX + barrelW) {
+      ctx.beginPath();
+      ctx.moveTo(xHalf, barrelY);
+      ctx.lineTo(xHalf, barrelY + 12);
+      ctx.strokeStyle = '#8b6d46';
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+    }
+  }
+  // Reference line (datum line)
+  ctx.beginPath();
+  ctx.moveTo(barrelX, barrelY + barrelH/2);
+  ctx.lineTo(barrelX + barrelW, barrelY + barrelH/2);
+  ctx.strokeStyle = 'rgba(184,92,42,0.6)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.restore();
+
+  // Thimble (circular head)
+  const thimbleX = barrelX + barrelW - 30 + (hsr / 100) * 0; // thimble position fixed visually
+  const thimbleActualX = barrelX + barrelW * 0.72;
+  const thimbleCY = barrelY + barrelH / 2;
+  const thimbleR = barrelH * 0.75;
+
+  ctx.fillStyle = '#c8b898';
+  ctx.beginPath();
+  ctx.arc(thimbleActualX, thimbleCY, thimbleR, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#7c5c2e'; ctx.lineWidth = 1.5; ctx.stroke();
+
+  // Thimble scale (100 divisions)
+  for(let i = 0; i < 100; i++) {
+    const angle = (i / 100) * Math.PI * 2 - Math.PI / 2;
+    const isCur = (i === hsr);
+    const isMajor = (i % 10 === 0);
+    const isMed = (i % 5 === 0);
+    const r1 = thimbleR - (isCur ? 13 : isMajor ? 11 : isMed ? 8 : 5);
+    const r2 = thimbleR - 1;
+    ctx.beginPath();
+    ctx.moveTo(thimbleActualX + Math.cos(angle) * r1, thimbleCY + Math.sin(angle) * r1);
+    ctx.lineTo(thimbleActualX + Math.cos(angle) * r2, thimbleCY + Math.sin(angle) * r2);
+    ctx.strokeStyle = isCur ? '#b85c2a' : isMajor ? '#5a3e28' : '#9a8470';
+    ctx.lineWidth = isCur ? 2.5 : isMajor ? 1.5 : 0.6;
+    ctx.stroke();
+    if(isMajor) {
+      const lx = thimbleActualX + Math.cos(angle) * (r1 - 8);
+      const ly = thimbleCY + Math.sin(angle) * (r1 - 8);
+      ctx.fillStyle = '#5a3e28';
+      ctx.font = '7px JetBrains Mono';
+      ctx.textAlign = 'center';
+      ctx.fillText(i, lx, ly + 3);
+    }
+  }
+  // Highlight current HSR
+  const curAngle = (hsr / 100) * Math.PI * 2 - Math.PI / 2;
+  ctx.fillStyle = 'rgba(184,92,42,0.2)';
+  ctx.beginPath();
+  ctx.moveTo(thimbleActualX, thimbleCY);
+  ctx.arc(thimbleActualX, thimbleCY, thimbleR, curAngle - 0.08, curAngle + 0.08);
+  ctx.closePath(); ctx.fill();
+
+  // Spindle (rod from thimble to anvil area)
+  const spindleEnd = frameX + 18 + (totalMM / 25) * (barrelX - frameX - 18);
+  ctx.fillStyle = '#c0aa88';
+  ctx.fillRect(frameX + 18, thimbleCY - 4, spindleEnd - frameX - 18, 8);
+  ctx.strokeStyle = '#7c5c2e'; ctx.lineWidth = 1; ctx.strokeRect(frameX + 18, thimbleCY - 4, spindleEnd - frameX - 18, 8);
+  // Spindle tip
+  ctx.fillStyle = '#8b6d46';
+  ctx.beginPath();
+  ctx.arc(spindleEnd, thimbleCY, 6, 0, Math.PI * 2);
+  ctx.fill(); ctx.stroke();
+
+  // Labels
+  ctx.fillStyle = '#5a3e28';
+  ctx.font = 'bold 11px JetBrains Mono';
+  ctx.textAlign = 'right';
+  ctx.fillText(`PSR: ${psr} mm  |  HSR: ${String(hsr).padStart(2,'0')}  |  Total: ${(psr + hsr*0.01).toFixed(2)} mm`, W - 15, H - 8);
+  ctx.font = '9px Space Grotesk'; ctx.fillStyle = '#9a8470'; ctx.textAlign = 'left';
+  ctx.fillText('Pitch Scale', barrelX, barrelY - 5);
+  ctx.fillStyle = '#7c5c2e';
+  ctx.fillText('Thimble', thimbleActualX - 20, thimbleCY - thimbleR - 5);
+}
+
+function recordScrewReading() {
+  const val = parseInt(document.getElementById('screwSlider').value);
+  const totalMM = val * 0.01;
+  const psr = Math.floor(totalMM);
+  const hsr = Math.round((totalMM - psr) * 100);
+  const total = psr + hsr * 0.01;
+  const corrected = total - screwZeroErr * 0.01;
+  screwObs.push({ psr, hsr, total: total.toFixed(2), corrected: corrected.toFixed(2) });
+  const tbody = document.querySelector('#screwTable tbody');
+  tbody.innerHTML = screwObs.map((r,i)=>`<tr><td>${i+1}</td><td>${r.psr}</td><td>${r.hsr}</td><td>${r.total}</td><td class="highlight">${r.corrected}</td></tr>`).join('');
+}
+
+function clearExp1() {
+  vernierObs=[]; screwObs=[];
+  refreshVernierTable();
+  document.querySelector('#screwTable tbody').innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:1rem">No readings recorded yet</td></tr>';
+  document.getElementById('exp1Result').style.display='none';
+}
+
+function calcExp1Mean() {
+  if(!vernierObs.length && !screwObs.length) return;
+  const vm = vernierObs.length ? (vernierObs.reduce((a,b)=>a+parseFloat(b.corrected),0)/vernierObs.length).toFixed(2) : '—';
+  const sm = screwObs.length ? (screwObs.reduce((a,b)=>a+parseFloat(b.corrected),0)/screwObs.length).toFixed(2) : '—';
+  document.getElementById('exp1Mean').textContent = `Vernier: ${vm} mm  |  Screw Gauge: ${sm} mm`;
+  document.getElementById('exp1Result').style.display='block';
+}
+
+// ═══════════════════════════════ SPECTROMETER ═══════════════════════════════
+let spectObs = [];
+
+function updateSpectrometer() {
+  const A = parseInt(document.getElementById('prismAngleSlider').value);
+  const D = parseInt(document.getElementById('deviationSlider').value);
+  const telesAngle = parseInt(document.getElementById('telesAngleSlider').value);
+  document.getElementById('prismAngleDisplay').textContent = A + '°';
+  document.getElementById('deviationDisplay').textContent = D + '°';
+  document.getElementById('telesAngleDisplay').textContent = telesAngle + '°';
+
+  const leftV = (telesAngle + 90) % 360;
+  const rightV = (leftV + 180) % 360;
+  document.getElementById('spectLeftReading').textContent = formatDMS(leftV);
+  document.getElementById('spectRightReading').textContent = formatDMS(rightV);
+
+  const sinNum = Math.sin(((A + D) / 2) * Math.PI / 180);
+  const sinDen = Math.sin((A / 2) * Math.PI / 180);
+  const n = sinNum / sinDen;
+  document.getElementById('spectResult').textContent = n.toFixed(4);
+
+  drawSpectrometer(A, D, telesAngle);
+}
+
+function formatDMS(deg) {
+  const d = Math.floor(deg);
+  const mFrac = (deg - d) * 60;
+  const m = Math.floor(mFrac);
+  return `${d}° ${m}'`;
+}
+
+function drawSpectrometer(A, D, telesAngle) {
+  const canvas = document.getElementById('spectrometerCanvas');
+  if(!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = canvas.offsetWidth * dpr;
+  canvas.height = 280 * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const W = canvas.offsetWidth, H = 280;
+
+  ctx.fillStyle = '#faf6f0'; ctx.fillRect(0,0,W,H);
+
+  const cx = W/2, cy = H/2 + 10;
+  const tableR = Math.min(W, H) * 0.34;
+
+  // Prism table circle
+  ctx.beginPath(); ctx.arc(cx, cy, tableR, 0, Math.PI*2);
+  ctx.fillStyle = '#f0e8d8'; ctx.fill();
+  ctx.strokeStyle = '#8b6d46'; ctx.lineWidth = 2; ctx.stroke();
+
+  // Degree markings around table
+  for(let i = 0; i < 360; i += 10) {
+    const angle = (i - 90) * Math.PI/180;
+    const isMajor = i % 30 === 0;
+    const r1 = tableR - (isMajor ? 14 : 8);
+    const r2 = tableR;
+    ctx.beginPath();
+    ctx.moveTo(cx + Math.cos(angle)*r1, cy + Math.sin(angle)*r1);
+    ctx.lineTo(cx + Math.cos(angle)*r2, cy + Math.sin(angle)*r2);
+    ctx.strokeStyle = '#8b6d46'; ctx.lineWidth = isMajor ? 1.5 : 0.7; ctx.stroke();
+    if(isMajor) {
+      const tx = cx + Math.cos(angle) * (r1 - 10);
+      const ty = cy + Math.sin(angle) * (r1 - 10);
+      ctx.fillStyle = '#5a3e28'; ctx.font = '9px JetBrains Mono'; ctx.textAlign='center';
+      ctx.fillText(i, tx, ty + 3);
+    }
+  }
+
+  // Prism (triangle)
+  const prismSize = tableR * 0.35;
+  const prismAngleRad = A * Math.PI / 180;
+  const p1 = { x: cx, y: cy - prismSize };
+  const halfBase = prismSize * Math.tan(prismAngleRad/2);
+  const p2 = { x: cx - halfBase, y: cy + prismSize * 0.5 };
+  const p3 = { x: cx + halfBase, y: cy + prismSize * 0.5 };
+  ctx.beginPath();
+  ctx.moveTo(p1.x, p1.y); ctx.lineTo(p2.x, p2.y); ctx.lineTo(p3.x, p3.y); ctx.closePath();
+  ctx.fillStyle = 'rgba(107,91,149,0.15)'; ctx.fill();
+  ctx.strokeStyle = '#6b5b95'; ctx.lineWidth = 2; ctx.stroke();
+  ctx.fillStyle = '#6b5b95'; ctx.font = 'bold 10px Space Grotesk'; ctx.textAlign='center';
+  ctx.fillText(`A=${A}°`, cx, cy + prismSize * 0.2);
+
+  // Collimator (fixed, from left)
+  const collAngle = Math.PI; // pointing right
+  ctx.beginPath();
+  ctx.moveTo(cx + Math.cos(collAngle)*(tableR+10), cy + Math.sin(collAngle)*(tableR+10));
+  ctx.lineTo(cx + Math.cos(collAngle)*(tableR+55), cy + Math.sin(collAngle)*(tableR+55));
+  ctx.strokeStyle = '#5a3e28'; ctx.lineWidth = 6; ctx.stroke();
+  ctx.fillStyle = '#5a3e28'; ctx.font='9px Space Grotesk'; ctx.textAlign='center';
+  ctx.fillText('Collimator', cx + Math.cos(collAngle)*(tableR+70), cy + Math.sin(collAngle)*(tableR+70));
+
+  // Incident ray
+  ctx.beginPath(); ctx.setLineDash([4,3]);
+  ctx.moveTo(cx + Math.cos(collAngle)*(tableR), cy);
+  ctx.lineTo(p2.x, p2.y);
+  ctx.strokeStyle = '#f5e642'; ctx.lineWidth = 1.5; ctx.stroke(); ctx.setLineDash([]);
+
+  // Telescope (rotatable)
+  const tAngle = (telesAngle - 90) * Math.PI/180;
+  ctx.beginPath();
+  ctx.moveTo(cx + Math.cos(tAngle)*(tableR+10), cy + Math.sin(tAngle)*(tableR+10));
+  ctx.lineTo(cx + Math.cos(tAngle)*(tableR+55), cy + Math.sin(tAngle)*(tableR+55));
+  ctx.strokeStyle = '#7c5c2e'; ctx.lineWidth = 6; ctx.stroke();
+  ctx.fillStyle = '#7c5c2e'; ctx.font='9px Space Grotesk'; ctx.textAlign='center';
+  ctx.fillText('Telescope', cx + Math.cos(tAngle)*(tableR+72), cy + Math.sin(tAngle)*(tableR+72));
+
+  // Deviated ray
+  ctx.beginPath(); ctx.setLineDash([4,3]);
+  ctx.moveTo(p2.x, p2.y);
+  ctx.lineTo(cx + Math.cos(tAngle)*tableR, cy + Math.sin(tAngle)*tableR);
+  ctx.strokeStyle = wavelengthToRGBA(550,0.9); ctx.lineWidth = 1.5; ctx.stroke(); ctx.setLineDash([]);
+
+  // Angle arc
+  ctx.beginPath();
+  ctx.arc(cx, cy, 40, collAngle + Math.PI, tAngle, true);
+  ctx.strokeStyle = '#b85c2a'; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = '#b85c2a'; ctx.font='10px JetBrains Mono'; ctx.textAlign='center';
+  ctx.fillText(`D=${D}°`, cx + 55, cy - 20);
+}
+
+function wavelengthToRGBA(wl, a) {
+  if(wl < 450) return `rgba(130,100,220,${a})`;
+  if(wl < 495) return `rgba(50,100,220,${a})`;
+  if(wl < 570) return `rgba(50,200,80,${a})`;
+  if(wl < 590) return `rgba(230,220,50,${a})`;
+  if(wl < 620) return `rgba(240,140,50,${a})`;
+  return `rgba(220,50,50,${a})`;
+}
+
+function recordSpectrometerReading() {
+  const A = parseInt(document.getElementById('prismAngleSlider').value);
+  const D = parseInt(document.getElementById('deviationSlider').value);
+  const telesAngle = parseInt(document.getElementById('telesAngleSlider').value);
+  const leftV = (telesAngle + 90) % 360;
+  const rightV = (leftV + 180) % 360;
+  const sinNum = Math.sin(((A + D) / 2) * Math.PI / 180);
+  const sinDen = Math.sin((A / 2) * Math.PI / 180);
+  const n = (sinNum / sinDen).toFixed(4);
+  spectObs.push({ A, D, left: formatDMS(leftV), right: formatDMS(rightV), n });
+  const tbody = document.getElementById('spectTableBody');
+  tbody.innerHTML = spectObs.map((r,i)=>`<tr><td>${i+1}</td><td>${r.A}°</td><td>${r.D}°</td><td>${r.left}</td><td>${r.right}</td><td class="highlight">${r.n}</td></tr>`).join('');
+}
+
+// ═══════════════════════════════ TRAVELLING MICROSCOPE ═══════════════════════════════
+let tmPointA = null, tmPointB = null, tmObs = [];
+
+function updateTM(val) {
+  val = parseInt(val);
+  // val: 0-10000 => 0.000 to 100.000 cm (LC = 0.001 cm)
+  const posCm = val * 0.001;
+  const msr = Math.floor(posCm); // integer cm
+  const vsrDiv = Math.round((posCm - msr) * 1000); // 0-999
+  document.getElementById('tmPosDisplay').textContent = posCm.toFixed(3) + ' cm';
+  document.getElementById('tmMSR').textContent = msr + ' cm';
+  document.getElementById('tmVSR').textContent = vsrDiv;
+  document.getElementById('tmTotal').textContent = posCm.toFixed(3);
+  drawTM(posCm, msr, vsrDiv);
+}
+
+function recordTMPoint(pt) {
+  const val = parseInt(document.getElementById('tmSlider').value);
+  const posCm = val * 0.001;
+  if(pt === 'A') {
+    tmPointA = posCm;
+    document.getElementById('tmPointA').textContent = posCm.toFixed(3) + ' cm';
+  } else {
+    tmPointB = posCm;
+    document.getElementById('tmPointB').textContent = posCm.toFixed(3) + ' cm';
+  }
+  if(tmPointA !== null && tmPointB !== null) {
+    const dist = Math.abs(tmPointB - tmPointA);
+    document.getElementById('tmDistance').textContent = dist.toFixed(3) + ' cm';
+  }
+}
+
+function recordTMReading() {
+  if(tmPointA === null || tmPointB === null) { alert('Set both Point A and Point B first'); return; }
+  const dist = Math.abs(tmPointB - tmPointA);
+  tmObs.push({ A: tmPointA.toFixed(3), B: tmPointB.toFixed(3), L: dist.toFixed(3) });
+  const tbody = document.getElementById('tmTableBody');
+  tbody.innerHTML = tmObs.map((r,i)=>`<tr><td>${i+1}</td><td>${r.A}</td><td>${r.B}</td><td class="highlight">${r.L}</td></tr>`).join('');
+  tmPointA = null; tmPointB = null;
+  document.getElementById('tmPointA').textContent = 'Not set';
+  document.getElementById('tmPointB').textContent = 'Not set';
+  document.getElementById('tmDistance').textContent = '—';
+}
+
+function drawTM(posCm, msr, vsrDiv) {
+  const canvas = document.getElementById('tmCanvas');
+  if(!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = canvas.offsetWidth * dpr;
+  canvas.height = 260 * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const W = canvas.offsetWidth, H = 260;
+
+  ctx.fillStyle = '#faf6f0'; ctx.fillRect(0,0,W,H);
+
+  // Draw microscope body
+  const bodyX = 30, bodyY = 30, bodyW = 50, bodyH = H - 60;
+  ctx.fillStyle = '#d4c4b0';
+  roundRect(ctx, bodyX, bodyY, bodyW, bodyH, 8);
+  ctx.fill(); ctx.strokeStyle = '#7c5c2e'; ctx.lineWidth = 2; ctx.stroke();
+
+  // Eyepiece at top
+  ctx.fillStyle = '#5a3e28';
+  roundRect(ctx, bodyX + 10, bodyY - 20, 30, 22, 6);
+  ctx.fill();
+  ctx.fillStyle = '#3a2010'; ctx.font = 'bold 9px Space Grotesk'; ctx.textAlign='center';
+  ctx.fillText('Eye', bodyX + 25, bodyY - 5);
+
+  // Objective lens at bottom
+  ctx.fillStyle = '#3a2010';
+  ctx.beginPath(); ctx.arc(bodyX + 25, bodyY + bodyH, 14, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#5a3e28'; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = '#e8f0f8'; ctx.font = '8px Space Grotesk'; ctx.textAlign='center';
+  ctx.fillText('Obj', bodyX + 25, bodyY + bodyH + 4);
+
+  // Vertical scale
+  const scaleX = bodyX + bodyW + 20;
+  const scaleY = 20, scaleH = H - 40;
+  ctx.fillStyle = '#e0d4c0';
+  ctx.fillRect(scaleX, scaleY, 20, scaleH);
+  ctx.strokeStyle = '#8b6d46'; ctx.lineWidth = 1; ctx.strokeRect(scaleX, scaleY, 20, scaleH);
+
+  // Ticks on vertical scale (0-10 cm range)
+  const cmPerPx = scaleH / 10;
+  const visStart = Math.max(0, posCm - 1.5);
+  ctx.save();
+  ctx.rect(scaleX, scaleY, 20, scaleH); ctx.clip();
+  for(let cm10 = 0; cm10 <= 100; cm10++) {
+    const cm = cm10 * 0.1;
+    const isMajor = cm10 % 10 === 0;
+    const isMed = cm10 % 5 === 0;
+    const yPos = scaleY + scaleH - (cm / 10) * scaleH;
+    if(yPos < scaleY - 5 || yPos > scaleY + scaleH + 5) continue;
+    const tickW = isMajor ? 18 : isMed ? 12 : 7;
+    ctx.beginPath(); ctx.moveTo(scaleX, yPos); ctx.lineTo(scaleX + tickW, yPos);
+    ctx.strokeStyle = isMajor ? '#5a3e28' : '#9a8470'; ctx.lineWidth = isMajor ? 1.5 : 0.7; ctx.stroke();
+    if(isMajor) {
+      ctx.fillStyle = '#5a3e28'; ctx.font = '9px JetBrains Mono'; ctx.textAlign='left';
+      ctx.fillText((cm).toFixed(0), scaleX + 20, yPos + 3);
+    }
+  }
+  ctx.restore();
+
+  // Cross-wire indicator
+  const cwY = scaleY + scaleH - (posCm / 10) * scaleH;
+  ctx.fillStyle = '#b85c2a';
+  ctx.fillRect(scaleX - 10, cwY - 1, 40, 2);
+  ctx.beginPath(); ctx.arc(scaleX - 5, cwY, 6, 0, Math.PI*2);
+  ctx.fillStyle = '#b85c2a'; ctx.fill();
+
+  // Connector line from microscope to scale
+  ctx.beginPath(); ctx.setLineDash([4,3]);
+  ctx.moveTo(bodyX + bodyW, bodyY + bodyH * (1 - posCm/10));
+  ctx.lineTo(scaleX - 10, cwY);
+  ctx.strokeStyle = 'rgba(184,92,42,0.4)'; ctx.lineWidth=1; ctx.stroke(); ctx.setLineDash([]);
+
+  // Object being viewed
+  const objType = document.getElementById('tmObjectSelect') ? document.getElementById('tmObjectSelect').value : 'wire';
+  const objY = bodyY + bodyH + 25;
+  if(objType === 'wire') {
+    ctx.fillStyle = '#5a3e28';
+    ctx.fillRect(bodyX + 15, objY, 20, 4);
+    ctx.font = '8px Space Grotesk'; ctx.fillStyle = '#9a8470'; ctx.textAlign='center';
+    ctx.fillText('Wire', bodyX + 25, objY + 14);
+  } else if(objType === 'meniscus') {
+    ctx.beginPath(); ctx.arc(bodyX + 25, objY + 5, 15, Math.PI, 0);
+    ctx.strokeStyle = '#6b5b95'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.font='8px Space Grotesk'; ctx.fillStyle='#9a8470'; ctx.textAlign='center';
+    ctx.fillText('Meniscus', bodyX + 25, objY + 20);
+  } else {
+    ctx.beginPath(); ctx.moveTo(bodyX + 12, objY); ctx.lineTo(bodyX + 12, objY + 8);
+    ctx.moveTo(bodyX + 38, objY); ctx.lineTo(bodyX + 38, objY + 8);
+    ctx.strokeStyle = '#3a7d5e'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.font='8px Space Grotesk'; ctx.fillStyle='#9a8470'; ctx.textAlign='center';
+    ctx.fillText('Slit', bodyX + 25, objY + 20);
+  }
+
+  // Vernier reading display
+  const vrX = scaleX + 60;
+  ctx.fillStyle = '#e8dfd0'; ctx.strokeStyle = '#8b6d46'; ctx.lineWidth=1;
+  roundRect(ctx, vrX, 20, 120, 60, 8); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#5a3e28'; ctx.font='bold 9px Space Grotesk'; ctx.textAlign='center';
+  ctx.fillText('Reading', vrX + 60, 36);
+  ctx.fillStyle = '#7c5c2e'; ctx.font='bold 12px JetBrains Mono'; ctx.textAlign='center';
+  ctx.fillText(posCm.toFixed(3) + ' cm', vrX + 60, 55);
+  ctx.fillStyle = '#9a8470'; ctx.font='8px Space Grotesk';
+  ctx.fillText(`MSR: ${msr} cm  VSR: ${vsrDiv}`, vrX + 60, 70);
+}
+
+// ═══════════════════════════════ EXP 2: NEWTON'S RINGS ═══════════════════════════════
+let ringObs = [];
+
+function wavelengthToColor(wl) {
+  if(wl < 380) return '#9060d0';
+  if(wl < 450) return `hsl(270,70%,55%)`;
+  if(wl < 495) return `hsl(235,70%,55%)`;
+  if(wl < 570) return `hsl(120,65%,40%)`;
+  if(wl < 590) return `hsl(55,75%,45%)`;
+  if(wl < 620) return `hsl(28,75%,48%)`;
+  return `hsl(0,70%,48%)`;
+}
+
+function drawNewtonsRings() {
+  const wl = parseInt(document.getElementById('wlSlider').value);
+  const R = parseInt(document.getElementById('rSlider').value) / 100;
+  const nr = parseInt(document.getElementById('nrSlider').value);
+  document.getElementById('wlDisplay').textContent = wl + ' nm';
+  document.getElementById('rDisplay').textContent = R.toFixed(2) + ' m';
+  document.getElementById('nrDisplay').textContent = nr;
+
+  const canvas = document.getElementById('newtonsCanvas');
+  if(!canvas) return;
+  const size = 400;
+  canvas.width = size; canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  const cx = size/2, cy = size/2;
+
+  ctx.fillStyle = '#fdfaf5'; ctx.fillRect(0,0,size,size);
+
+  const scale = 60000;
+  const color = wavelengthToColor(wl);
+
+  for(let n=nr; n>=0; n--) {
+    const r_dark = Math.sqrt(n * (wl*1e-9) * R) * scale;
+    const r_bright = n>0 ? Math.sqrt((n-0.5) * (wl*1e-9) * R) * scale : 0;
+    if(r_dark > size/2 * 1.5) continue;
+    ctx.beginPath(); ctx.arc(cx, cy, r_dark, 0, Math.PI*2);
+    ctx.strokeStyle = 'rgba(40,20,5,0.9)'; ctx.lineWidth = 2; ctx.stroke();
+    if(r_bright > 0) {
+      ctx.beginPath(); ctx.arc(cx, cy, r_bright, 0, Math.PI*2);
+      ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.stroke();
+    }
+  }
+  ctx.beginPath(); ctx.arc(cx, cy, 3, 0, Math.PI*2);
+  ctx.fillStyle = '#3a2010'; ctx.fill();
+
+  const tbody = document.getElementById('ringDiamBody');
+  let rows = '';
+  for(let n=1; n<=Math.min(nr,10); n++) {
+    const D = 2 * Math.sqrt(n * (wl*1e-9) * R) * 1000;
+    rows += `<tr><td>${n}</td><td>${D.toFixed(3)}</td></tr>`;
+  }
+  tbody.innerHTML = rows;
+  if(document.getElementById('rKnown')) document.getElementById('rKnown').textContent = R.toFixed(2);
+}
+
+function selectRing(n) {
+  const wl = parseInt(document.getElementById('wlSlider').value);
+  const R = parseInt(document.getElementById('rSlider').value) / 100;
+  document.getElementById('selRingNum').textContent = n;
+  const D = 2 * Math.sqrt(n * (wl*1e-9) * R) * 1000;
+  const left = (50 - D/2).toFixed(3);
+  const right = (50 + D/2).toFixed(3);
+  document.getElementById('leftReading').textContent = left + ' mm';
+  document.getElementById('rightReading').textContent = right + ' mm';
+  document.getElementById('diamReading').textContent = D.toFixed(3) + ' mm';
+}
+
+function recordRing() {
+  const n = parseInt(document.getElementById('ringSelect').value);
+  const wl = parseInt(document.getElementById('wlSlider').value);
+  const R = parseInt(document.getElementById('rSlider').value) / 100;
+  const D = 2 * Math.sqrt(n * (wl*1e-9) * R) * 1000;
+  if(ringObs.find(r=>r.n===n)) { alert('Ring '+n+' already recorded'); return; }
+  ringObs.push({ n, D: D.toFixed(3), D2: (D*D).toFixed(4) });
+  ringObs.sort((a,b)=>a.n-b.n);
+  const tbody = document.getElementById('ringsObsBody');
+  tbody.innerHTML = ringObs.map(r=>`<tr><td>${r.n}</td><td>${r.D}</td><td class="highlight">${r.D2}</td></tr>`).join('');
+}
+
+function calcR() {
+  const m = parseInt(document.getElementById('ringMSlider').value);
+  const n = parseInt(document.getElementById('ringNSlider').value);
+  const wl = parseInt(document.getElementById('wlSlider').value) * 1e-9;
+  const Rsim = parseInt(document.getElementById('rSlider').value) / 100;
+  document.getElementById('ringMVal').textContent = m;
+  document.getElementById('ringNVal').textContent = n;
+  document.getElementById('rKnown').textContent = Rsim.toFixed(2);
+  const Dm = 2 * Math.sqrt(m * wl * Rsim) * 1000;
+  const Dn = 2 * Math.sqrt(n * wl * Rsim) * 1000;
+  const diffD2 = (Dm*Dm - Dn*Dn).toFixed(4);
+  const Rcalc = (Dm*Dm - Dn*Dn) / (4*(m-n)*wl*1e6);
+  document.getElementById('diffD2').textContent = diffD2 + ' mm²';
+  document.getElementById('denomR').textContent = '4×' + (m-n) + '×' + (wl*1e9).toFixed(0) + 'nm';
+  document.getElementById('rResult').textContent = Rcalc.toFixed(3);
+}
+
+// ═══════════════════════════════ EXP 3: DIFFRACTION GRATING ═══════════════════════════════
+let diffObs = [];
+
+function getGratingD(select) {
+  const val = select.options[select.selectedIndex].value;
+  const unit = select.options[select.selectedIndex].text;
+  if(unit.includes('inch')) return 0.0254 / parseInt(val);
+  return 1e-3 / parseInt(val);
+}
+
+function updateDiffraction() {
+  const wl = parseInt(document.getElementById('diffWlSlider').value) * 1e-9;
+  const gSel = document.getElementById('diffGratingSelect');
+  const d = getGratingD(gSel);
+  const n = parseInt(document.getElementById('diffOrderSlider').value);
+  document.getElementById('diffWlDisplay').textContent = (wl*1e9).toFixed(0) + ' nm';
+  document.getElementById('diffNDisplay').textContent = gSel.options[gSel.selectedIndex].text;
+  document.getElementById('diffOrderDisplay').textContent = 'n = ' + n;
+
+  const sinTheta = n * wl / d;
+  const theta = sinTheta <= 1 ? Math.asin(sinTheta)*180/Math.PI : null;
+  document.getElementById('dDisplay').textContent = (d*1e6).toFixed(3) + ' μm';
+  document.getElementById('thetaDisplay').textContent = theta ? theta.toFixed(2) + '°' : 'Exceeds limit';
+  document.getElementById('diffLambda').textContent = theta ? (wl*1e9).toFixed(0) + ' nm' : '—';
+
+  drawDiffraction(wl, d, n);
+}
+
+function drawDiffraction(wl, d, highlightN) {
+  const canvas = document.getElementById('diffCanvas');
+  if(!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = canvas.offsetWidth * dpr;
+  canvas.height = 320 * dpr;
+  ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const W = canvas.offsetWidth, H = 320;
+
+  ctx.fillStyle = '#faf6f0'; ctx.fillRect(0,0,W,H);
+
+  const cx = W/2, cy = H*0.32;
+  const gratingY = H*0.72;
+  const L = cy;
+  const color = wavelengthToColor(wl*1e9);
+
+  // Draw grating
+  for(let x=0; x<W; x+=8) {
+    ctx.beginPath(); ctx.moveTo(x, gratingY-8); ctx.lineTo(x, gratingY+8);
+    ctx.strokeStyle = '#c9b49a'; ctx.lineWidth = 0.7; ctx.stroke();
+  }
+  ctx.strokeStyle = '#8b6d46'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(0,gratingY); ctx.lineTo(W,gratingY); ctx.stroke();
+  ctx.fillStyle='#8b6d46'; ctx.font='10px Space Grotesk'; ctx.textAlign='center';
+  ctx.fillText('DIFFRACTION GRATING', W/2, gratingY+20);
+
+  // Draw diffracted beams
+  for(let n=0; n<=4; n++) {
+    const sinTheta = n * wl / d;
+    if(sinTheta > 0.95) break;
+    const theta = Math.asin(sinTheta);
+    const dx = Math.sin(theta) * L;
+    for(const side of [1,-1]) {
+      const ex = cx + side*dx;
+      const isHL = n===highlightN;
+      const alpha = isHL ? 1 : Math.max(0.2, 1-n*0.22);
+      ctx.beginPath();
+      ctx.moveTo(cx, gratingY); ctx.lineTo(ex, cy);
+      const col = n===0 ? `rgba(80,50,20,${alpha})` : color.replace('hsl','hsla').replace(')',`,${alpha})`);
+      ctx.strokeStyle = col;
+      ctx.lineWidth = isHL ? 2.5 : 1; ctx.stroke();
+      ctx.beginPath(); ctx.arc(ex, cy-3, isHL?6:4, 0, Math.PI*2);
+      ctx.fillStyle = n===0 ? '#5a3e28' : color;
+      ctx.globalAlpha = alpha; ctx.fill(); ctx.globalAlpha = 1;
+      if(isHL || n===0) {
+        ctx.fillStyle = '#7c5c2e'; ctx.font='10px JetBrains Mono'; ctx.textAlign='center';
+        ctx.fillText(n===0?'n=0':'n='+n, ex, cy-15);
+      }
+    }
+  }
+
+  // Screen line
+  ctx.strokeStyle = '#c9b49a'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(20, cy); ctx.lineTo(W-20, cy); ctx.stroke();
+  ctx.fillStyle='#7c5c2e'; ctx.font='10px Space Grotesk'; ctx.textAlign='left';
+  ctx.fillText('SCREEN', 24, cy-8);
+
+  // Angle arc
+  if(highlightN > 0) {
+    const sinTh = highlightN*wl/d;
+    if(sinTh < 1) {
+      const theta = Math.asin(sinTh);
+      ctx.beginPath();
+      ctx.arc(cx, gratingY, 50, -Math.PI/2, -Math.PI/2+theta, false);
+      ctx.strokeStyle='#b85c2a'; ctx.lineWidth=1.5; ctx.stroke();
+      ctx.fillStyle='#b85c2a'; ctx.font='10px JetBrains Mono'; ctx.textAlign='left';
+      ctx.fillText('θ='+(theta*180/Math.PI).toFixed(1)+'°', cx+55, gratingY-30);
+    }
+  }
+
+  // Incident light
+  ctx.beginPath(); ctx.setLineDash([4,4]);
+  ctx.moveTo(cx, gratingY+50); ctx.lineTo(cx, gratingY);
+  ctx.strokeStyle='rgba(80,50,20,0.35)'; ctx.lineWidth=1; ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle='#9a8470'; ctx.font='10px Space Grotesk'; ctx.textAlign='center';
+  ctx.fillText('Incident light', cx, gratingY+65);
+}
+
+function recordDiffraction() {
+  const colorSel = document.getElementById('colorSelect');
+  const wlActual = parseInt(colorSel.options[colorSel.selectedIndex].dataset.wl);
+  const wlSim = parseInt(document.getElementById('diffWlSlider').value);
+  const wl = wlSim * 1e-9;
+  const n = parseInt(document.getElementById('orderSelect').value);
+  const gSel = document.getElementById('diffGratingSelect');
+  const d = getGratingD(gSel);
+  const sinTheta = n*wl/d;
+  if(sinTheta > 1) { alert('This order is not observable for this wavelength/grating combination'); return; }
+  const theta = Math.asin(sinTheta)*180/Math.PI;
+  const color = colorSel.value;
+  const calcLambda = d*sinTheta/n*1e9;
+  const deviation = Math.abs((calcLambda - wlActual) / wlActual * 100);
+
+  diffObs.push({ color, wlActual, wlSim, n, theta: theta.toFixed(2), sinTheta: sinTheta.toFixed(4), calcLambda: calcLambda.toFixed(1), deviation: deviation.toFixed(2) });
+
+  const tbody = document.getElementById('diffTableBody');
+  tbody.innerHTML = diffObs.map(r=>{
+    const devNum = parseFloat(r.deviation);
+    const devColor = devNum < 1 ? 'var(--success)' : devNum < 5 ? 'var(--warning)' : 'var(--error)';
+    return `<tr>
+      <td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${r.color};margin-right:6px;vertical-align:middle"></span>${r.color} (${r.wlActual}nm)</td>
+      <td>${r.n}</td><td>${r.theta}</td><td>${r.sinTheta}</td>
+      <td class="highlight">${r.calcLambda}</td>
+      <td>${r.wlActual}</td>
+      <td style="color:${devColor};font-weight:600">${r.deviation}%</td>
+    </tr>`;
+  }).join('');
+
+  // Mean deviation
+  if(diffObs.length > 0) {
+    const meanDev = (diffObs.reduce((a,b)=>a+parseFloat(b.deviation),0)/diffObs.length).toFixed(2);
+    document.getElementById('meanDeviation').textContent = meanDev;
+    document.getElementById('deviationSummary').style.display = 'block';
+  }
+}
+
+function clearDiffObs() {
+  diffObs = [];
+  document.getElementById('diffTableBody').innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:1rem">No observations recorded — use Tab 3 to record</td></tr>';
+  document.getElementById('deviationSummary').style.display = 'none';
+}
+
+function calcDiffResult() {
+  if(!diffObs.length) { alert('Record observations in the Simulation tab first'); return; }
+
+  const canvas = document.getElementById('diffResultCanvas');
+  if(!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = canvas.offsetWidth * dpr;
+  canvas.height = 220 * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const W = canvas.offsetWidth, H = 220;
+  ctx.fillStyle = '#faf6f0'; ctx.fillRect(0,0,W,H);
+
+  const grouped = {};
+  diffObs.forEach(r => { if(!grouped[r.color]) grouped[r.color]=[]; grouped[r.color].push({ calc: parseFloat(r.calcLambda), actual: r.wlActual }); });
+  const colors = Object.keys(grouped);
+  const bw = Math.min(55, (W-80)/colors.length - 10);
+  const maxLambda = 750;
+
+  ctx.strokeStyle = '#e0d4c0'; ctx.lineWidth = 0.5;
+  for(let i=0;i<5;i++) { const y=H-40-(i*(H-60)/4); ctx.beginPath(); ctx.moveTo(50,y); ctx.lineTo(W-20,y); ctx.stroke(); ctx.fillStyle='#9a8470'; ctx.font='8px JetBrains Mono'; ctx.textAlign='right'; ctx.fillText((150+i*150)+'nm',48,y+3); }
+
+  colors.forEach((c,i) => {
+    const meanCalc = grouped[c].reduce((a,b)=>a+b.calc,0)/grouped[c].length;
+    const actual = grouped[c][0].actual;
+    const bh = (meanCalc/maxLambda)*(H-60);
+    const x = 60 + i*((W-80)/colors.length);
+    const y = H-40-bh;
+    ctx.fillStyle = c; ctx.fillRect(x, y, bw, bh);
+    ctx.strokeStyle = '#7c5c2e'; ctx.lineWidth=1; ctx.strokeRect(x, y, bw, bh);
+    ctx.fillStyle = '#5a3e28'; ctx.font='9px Space Grotesk'; ctx.textAlign='center';
+    ctx.fillText(c, x+bw/2, H-25);
+    ctx.fillStyle = '#3a2010'; ctx.font='bold 9px JetBrains Mono';
+    ctx.fillText(meanCalc.toFixed(0)+'nm', x+bw/2, y-4);
+    // Actual marker
+    const actualY = H-40-(actual/maxLambda)*(H-60);
+    ctx.beginPath(); ctx.moveTo(x, actualY); ctx.lineTo(x+bw, actualY);
+    ctx.strokeStyle='#b85c2a'; ctx.lineWidth=1.5; ctx.stroke();
+  });
+
+  ctx.fillStyle='#9a8470'; ctx.font='9px Space Grotesk'; ctx.textAlign='center';
+  ctx.fillText('Measured Wavelengths (nm) — Bar line shows actual value', W/2, H-5);
+
+  const means = Object.entries(grouped).map(([c,arr])=>({
+    c, meanCalc: (arr.reduce((a,b)=>a+b.calc,0)/arr.length),
+    actual: arr[0].actual
+  }));
+  const correctedRows = means.map(m => {
+    const dev = ((m.meanCalc - m.actual)/m.actual*100).toFixed(2);
+    const corrected = m.actual; // corrected = actual after deviation analysis
+    return { c: m.c, calc: m.meanCalc.toFixed(1), actual: m.actual, dev, corrected };
+  });
+
+  document.getElementById('diffResultBox').innerHTML = '<div class="result-label">Mean Wavelengths by Color</div>' +
+    means.map(m=>`<div style="display:flex;align-items:center;gap:8px;margin-top:0.5rem">
+      <span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${m.c}"></span>
+      <span style="font-family:JetBrains Mono;color:var(--success);font-size:1rem">${m.meanCalc.toFixed(1)} nm</span>
+      <span style="color:var(--text3);font-size:0.8rem">(Actual: ${m.actual} nm, Dev: ${((m.meanCalc-m.actual)/m.actual*100).toFixed(2)}%)</span>
+    </div>`).join('');
+
+  document.getElementById('diffFinalCalc').style.display = 'block';
+  document.getElementById('diffCorrectedBody').innerHTML = correctedRows.map(r =>
+    `<tr><td>${r.c}</td><td>${r.calc}</td><td>${r.actual}</td>
+     <td style="color:${parseFloat(r.dev)<2?'var(--success)':'var(--warning)'}">${r.dev}%</td>
+     <td class="highlight">${r.corrected}</td></tr>`
+  ).join('');
+}
+
+// ═══════════════════════════════ EXP 4: FOUR PROBE METHOD (Temperature in Kelvin) ═══════════════════════════════
+let fpData = [];
+
+function getSemiconductorResistivity(T_K) {
+  // Germanium band gap ~0.67eV; T in Kelvin
+  const Eg = 0.67 * 1.6e-19;
+  const k = 1.38e-23;
+  return 0.046 * Math.exp(Eg / (2 * k * T_K));
+}
+
+function updateFourProbe() {
+  const T_K = parseInt(document.getElementById('tempSlider').value);
+  const I = parseFloat(document.getElementById('currSlider').value) * 1e-3;
+  const s = parseFloat(document.getElementById('spaceSlider').value) * 1e-3;
+  document.getElementById('tempDisplay').textContent = T_K + ' K';
+  document.getElementById('currDisplay').textContent = (I*1000).toFixed(2) + ' mA';
+  document.getElementById('spaceDisplay').textContent = (s*1000).toFixed(1) + ' mm';
+
+  const rho = getSemiconductorResistivity(T_K);
+  const rhoCm = rho * 100;
+  const V = rho * I / (2 * Math.PI * s);
+  document.getElementById('voltDisplay').textContent = (V*1000).toFixed(2) + ' mV';
+  document.getElementById('rhoDisplay').textContent = rhoCm.toFixed(4) + ' Ω·cm';
+
+  drawFourProbeGraph();
+}
+
+function recordFourProbe() {
+  const T_K = parseInt(document.getElementById('tempSlider').value);
+  const I = parseFloat(document.getElementById('currSlider').value);
+  const s = parseFloat(document.getElementById('spaceSlider').value) * 1e-3;
+  const rho = getSemiconductorResistivity(T_K) * 100;
+  const V = getSemiconductorResistivity(T_K) * I*1e-3 / (2*Math.PI*s);
+
+  if(fpData.find(d=>d.TK===T_K)) { alert('Temperature '+T_K+' K already recorded'); return; }
+  fpData.push({
+    TK: T_K,
+    invT: (1/T_K).toFixed(6),
+    V: (V*1000).toFixed(3),
+    I: I.toFixed(2),
+    rho: rho.toFixed(4),
+    lnRho: Math.log(rho).toFixed(4)
+  });
+  fpData.sort((a,b)=>a.TK-b.TK);
+
+  const tbody = document.getElementById('fpBody');
+  tbody.innerHTML = fpData.map(r=>`<tr>
+    <td>${r.TK}</td><td>${r.invT}</td><td>${r.V}</td>
+    <td>${r.I}</td><td class="highlight">${r.rho}</td><td>${r.lnRho}</td>
+  </tr>`).join('');
+  drawFourProbeGraph();
+}
+
+function drawFourProbeGraph() {
+  const canvas = document.getElementById('fourProbeCanvas');
+  if(!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = canvas.offsetWidth * dpr;
+  canvas.height = 220 * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const W = canvas.offsetWidth, H = 220;
+  ctx.fillStyle = '#fdfaf5'; ctx.fillRect(0,0,W,H);
+
+  // T_K range: 303 to 453
+  const T_range = Array.from({length:31},(_,i)=>303+i*5);
+  const pts = T_range.map(T=>({ T, rho: getSemiconductorResistivity(T)*100 }));
+  const minRho = Math.min(...pts.map(p=>p.rho)), maxRho = Math.max(...pts.map(p=>p.rho));
+  const pad = {l:50,r:20,t:20,b:35};
+  const gW=W-pad.l-pad.r, gH=H-pad.t-pad.b;
+
+  const xToScreen = T => pad.l + (T-303)/(453-303)*gW;
+  const yToScreen = rho => pad.t + gH - (Math.log(rho)-Math.log(minRho))/(Math.log(maxRho)-Math.log(minRho))*gH;
+
+  ctx.strokeStyle='#e0d4c0'; ctx.lineWidth=0.5;
+  for(let i=0;i<=5;i++) { const y=pad.t+i*gH/5; ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(W-pad.r,y); ctx.stroke(); }
+
+  ctx.beginPath();
+  pts.forEach((p,i) => { const x=xToScreen(p.T), y=yToScreen(p.rho); i===0?ctx.moveTo(x,y):ctx.lineTo(x,y); });
+  ctx.strokeStyle='rgba(58,125,94,0.5)'; ctx.lineWidth=2; ctx.stroke();
+
+  fpData.forEach(d => {
+    const x=xToScreen(d.TK), y=yToScreen(parseFloat(d.rho));
+    ctx.beginPath(); ctx.arc(x,y,5,0,Math.PI*2);
+    ctx.fillStyle='#b85c2a'; ctx.fill();
+    ctx.strokeStyle='#faf6f0'; ctx.lineWidth=1; ctx.stroke();
+  });
+
+  ctx.strokeStyle='#9a8470'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(pad.l,pad.t); ctx.lineTo(pad.l,H-pad.b); ctx.lineTo(W-pad.r,H-pad.b); ctx.stroke();
+
+  ctx.fillStyle='#9a8470'; ctx.font='9px Space Grotesk'; ctx.textAlign='center';
+  ctx.fillText('Temperature (K)', W/2, H-4);
+  ctx.save(); ctx.rotate(-Math.PI/2); ctx.textAlign='center';
+  ctx.fillText('ρ (Ω·cm)', -(H/2), 12); ctx.restore();
+
+  [303,333,363,393,423,453].forEach(T => {
+    ctx.fillStyle='#9a8470'; ctx.textAlign='center';
+    ctx.fillText(T, xToScreen(T), H-pad.b+12);
+  });
+}
+
+function drawCircuit() {
+  const canvas = document.getElementById('circuitCanvas');
+  if(!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = canvas.offsetWidth * dpr;
+  canvas.height = 300 * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const W = canvas.offsetWidth, H = 300;
+  ctx.fillStyle = '#faf6f0'; ctx.fillRect(0,0,W,H);
+
+  const sx=W*0.25, sy=H*0.45, sw=W*0.5, sh=40;
+  ctx.fillStyle='#e0d4c0'; ctx.fillRect(sx,sy,sw,sh);
+  ctx.strokeStyle='#7c5c2e'; ctx.lineWidth=2; ctx.strokeRect(sx,sy,sw,sh);
+  ctx.fillStyle='#6b5b95'; ctx.font='bold 11px Space Grotesk'; ctx.textAlign='center';
+  ctx.fillText('Germanium (n-type)', sx+sw/2, sy+sh/2+4);
+
+  const probeSpacing = sw/4;
+  const probeColors = ['#b85c2a','#7c5c2e','#7c5c2e','#b85c2a'];
+  const probeLabels = ['P1','P2','P3','P4'];
+  const probeX = [sx+probeSpacing*0.5, sx+probeSpacing*1.5, sx+probeSpacing*2.5, sx+probeSpacing*3.5];
+
+  probeX.forEach((px,i) => {
+    ctx.fillStyle=probeColors[i]; ctx.fillRect(px-3, sy-30, 6, 30);
+    ctx.beginPath(); ctx.arc(px, sy-30, 5, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle='#5a3e28'; ctx.font='10px JetBrains Mono'; ctx.textAlign='center';
+    ctx.fillText(probeLabels[i], px, sy-38);
+  });
+
+  ctx.strokeStyle='#b85c2a'; ctx.lineWidth=2; ctx.setLineDash([5,3]);
+  ctx.beginPath();
+  ctx.moveTo(probeX[0], sy-30); ctx.lineTo(probeX[0], H*0.15); ctx.lineTo(W*0.15, H*0.15);
+  ctx.moveTo(probeX[3], sy-30); ctx.lineTo(probeX[3], H*0.15); ctx.lineTo(W*0.85, H*0.15);
+  ctx.stroke(); ctx.setLineDash([]);
+
+  const csX=W*0.5, csY=H*0.1;
+  ctx.beginPath(); ctx.moveTo(W*0.15, H*0.15); ctx.lineTo(csX-25, H*0.15); ctx.strokeStyle='#b85c2a'; ctx.stroke();
+  ctx.beginPath(); ctx.arc(csX, csY+5, 18, 0, Math.PI*2);
+  ctx.fillStyle='#f0e8d8'; ctx.fill(); ctx.strokeStyle='#b85c2a'; ctx.lineWidth=1.5; ctx.stroke();
+  ctx.fillStyle='#b85c2a'; ctx.font='bold 11px JetBrains Mono'; ctx.textAlign='center';
+  ctx.fillText('I', csX, csY+10);
+  ctx.beginPath(); ctx.moveTo(csX+25, H*0.15); ctx.lineTo(W*0.85, H*0.15); ctx.stroke();
+  ctx.fillStyle='#b85c2a'; ctx.font='10px Space Grotesk'; ctx.textAlign='center';
+  ctx.fillText('Constant Current Source', csX, csY-15);
+
+  ctx.strokeStyle='#7c5c2e'; ctx.lineWidth=2; ctx.setLineDash([5,3]);
+  ctx.beginPath();
+  ctx.moveTo(probeX[1], sy-30); ctx.lineTo(probeX[1], H*0.82);
+  ctx.lineTo(W*0.3, H*0.82); ctx.lineTo(W*0.3, H*0.92);
+  ctx.moveTo(probeX[2], sy-30); ctx.lineTo(probeX[2], H*0.82);
+  ctx.lineTo(W*0.7, H*0.82); ctx.lineTo(W*0.7, H*0.92);
+  ctx.stroke(); ctx.setLineDash([]);
+
+  ctx.beginPath(); ctx.arc(W*0.5, H*0.92, 18, 0, Math.PI*2);
+  ctx.fillStyle='#f0e8d8'; ctx.fill(); ctx.strokeStyle='#7c5c2e'; ctx.lineWidth=1.5; ctx.stroke();
+  ctx.fillStyle='#7c5c2e'; ctx.font='bold 11px JetBrains Mono'; ctx.textAlign='center';
+  ctx.fillText('V', W*0.5, H*0.925);
+  ctx.beginPath(); ctx.moveTo(W*0.3, H*0.92); ctx.lineTo(W*0.5-18, H*0.92); ctx.strokeStyle='#7c5c2e'; ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(W*0.7, H*0.92); ctx.lineTo(W*0.5+18, H*0.92); ctx.stroke();
+  ctx.fillStyle='#7c5c2e'; ctx.font='10px Space Grotesk'; ctx.textAlign='center';
+  ctx.fillText('Millivoltmeter (Inner Probes P2-P3)', W*0.5, H*0.99);
+}
+
+function calcBandGap() {
+  if(fpData.length < 3) {
+    document.getElementById('bandGapResult').innerHTML='<div style="color:var(--warning);text-align:center;padding:1rem">Need at least 3 temperature readings</div>';
+    return;
+  }
+
+  const canvas = document.getElementById('bandGapCanvas');
+  if(!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = canvas.offsetWidth * dpr;
+  canvas.height = 300 * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  const W = canvas.offsetWidth, H = 300;
+  ctx.fillStyle = '#fdfaf5'; ctx.fillRect(0,0,W,H);
+
+  const pts = fpData.map(d=>({ x: parseFloat(d.invT), y: parseFloat(d.lnRho) }));
+  const minX=Math.min(...pts.map(p=>p.x)), maxX=Math.max(...pts.map(p=>p.x));
+  const minY=Math.min(...pts.map(p=>p.y)), maxY=Math.max(...pts.map(p=>p.y));
+  const pad={l:60,r:20,t:20,b:50};
+  const gW=W-pad.l-pad.r, gH=H-pad.t-pad.b;
+
+  const xs=x=>pad.l+(x-minX)/((maxX-minX)||0.001)*gW;
+  const ys=y=>pad.t+gH-(y-minY)/((maxY-minY)||0.001)*gH;
+
+  ctx.strokeStyle='#e0d4c0'; ctx.lineWidth=0.5;
+  for(let i=0;i<=5;i++) {
+    const y=pad.t+i*gH/5; ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(W-pad.r,y); ctx.stroke();
+    const x=pad.l+i*gW/5; ctx.beginPath(); ctx.moveTo(x,pad.t); ctx.lineTo(x,H-pad.b); ctx.stroke();
+  }
+
+  const n=pts.length;
+  const sumX=pts.reduce((a,p)=>a+p.x,0), sumY=pts.reduce((a,p)=>a+p.y,0);
+  const sumXY=pts.reduce((a,p)=>a+p.x*p.y,0), sumX2=pts.reduce((a,p)=>a+p.x*p.x,0);
+  const slope=(n*sumXY-sumX*sumY)/(n*sumX2-sumX*sumX);
+  const intercept=(sumY-slope*sumX)/n;
+
+  ctx.beginPath();
+  ctx.moveTo(xs(minX), ys(slope*minX+intercept));
+  ctx.lineTo(xs(maxX), ys(slope*maxX+intercept));
+  ctx.strokeStyle='rgba(184,92,42,0.7)'; ctx.lineWidth=2; ctx.stroke();
+
+  pts.forEach(p => {
+    ctx.beginPath(); ctx.arc(xs(p.x), ys(p.y), 6, 0, Math.PI*2);
+    ctx.fillStyle='#3a7d5e'; ctx.fill();
+    ctx.strokeStyle='#fdfaf5'; ctx.lineWidth=1; ctx.stroke();
+  });
+
+  ctx.strokeStyle='#9a8470'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(pad.l,pad.t); ctx.lineTo(pad.l,H-pad.b); ctx.lineTo(W-pad.r,H-pad.b); ctx.stroke();
+
+  ctx.fillStyle='#9a8470'; ctx.font='9px Space Grotesk'; ctx.textAlign='center';
+  ctx.fillText('1/T  (K⁻¹)', W/2, H-8);
+  ctx.save(); ctx.rotate(-Math.PI/2); ctx.textAlign='center'; ctx.fillText('ln(ρ)', -(H/2), 14); ctx.restore();
+
+  ctx.fillStyle='#9a8470'; ctx.font='8px JetBrains Mono';
+  for(let i=0;i<=5;i++) {
+    const x=pad.l+i*gW/5;
+    const val=(minX+i*(maxX-minX)/5).toFixed(5);
+    ctx.textAlign='center'; ctx.fillText(val, x, H-pad.b+14);
+  }
+
+  const k = 8.617e-5;
+  const Eg = 2 * k * slope;
+  const EgEv = Math.abs(Eg);
+
+  document.getElementById('bandGapResult').innerHTML = `
+    <div class="two-col">
+      <div class="result-box">
+        <div class="result-label">Slope of ln(ρ) vs 1/T</div>
+        <span class="result-value">${slope.toFixed(0)}</span><span class="result-unit">K</span>
+      </div>
+      <div class="result-box">
+        <div class="result-label">Band Gap  Eg = 2k × slope</div>
+        <span class="result-value">${EgEv.toFixed(3)}</span><span class="result-unit">eV</span>
+      </div>
+    </div>
+    <div class="info-callout" style="margin-top:1rem">
+      <strong>Standard value for Germanium:</strong> Eg = 0.67 eV. Your calculated value: <strong style="color:var(--success)">${EgEv.toFixed(3)} eV</strong>
+    </div>`;
+}
+
+function clearFP() {
+  fpData = [];
+  document.getElementById('fpBody').innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:1rem">No readings recorded</td></tr>';
+  document.getElementById('bandGapResult').innerHTML='<div style="color:var(--text3);text-align:center;padding:1rem">Record at least 3 temperatures in Tab 4 to see the graph and calculate band gap</div>';
+  const canvas = document.getElementById('bandGapCanvas');
+  if(canvas) { const ctx = canvas.getContext('2d'); ctx.clearRect(0,0,canvas.width,canvas.height); }
+}
+
+// ─── INIT ───
+window.addEventListener('load', () => {
+  updateVernier(124);
+  updateScrew(245);
+  selectRing(5);
+  updateFourProbe();
+  drawCircuit();
+  updateSpectrometer();
+  updateTM(2450);
+});
+
+window.addEventListener('resize', () => {
+  setTimeout(()=>{
+    const v = document.getElementById('vernierSlider').value;
+    if(document.getElementById('exp1').classList.contains('active')) {
+      updateVernier(v);
+      updateScrew(document.getElementById('screwSlider').value);
+    }
+    if(document.getElementById('exp2').classList.contains('active')) drawNewtonsRings();
+    if(document.getElementById('exp3').classList.contains('active')) updateDiffraction();
+    if(document.getElementById('exp4').classList.contains('active')) { drawCircuit(); drawFourProbeGraph(); }
+  }, 100);
+});
+</script>
+</body>
+</html>
